@@ -1,0 +1,17 @@
+[
+  {"pergunta":"RF09 restringir geração de conteúdo", "fontes":["ers-v2"], "evidencia":"pelo menos 30"},
+  {"pergunta":"RF17 etapas da produção", "fontes":["ers-v2"], "evidencia":"Planejar → Escrever → Revisar → Reescrever"},
+  {"pergunta":"RF21 termo de ciência e consentimento", "fontes":["ers-v2"], "evidencia":"consentimento do responsável"},
+  {"pergunta":"RN02 proibição de reescrever", "fontes":["ers-v2"], "evidencia":"não redige, reescreve"},
+  {"pergunta":"B2 fontes da similaridade", "fontes":["decisoes-v1-2","contexto"], "evidencia":"Produções internas|textos internos"},
+  {"pergunta":"B5 B10 pendentes", "fontes":["decisoes-v1-2"], "evidencia":"Pendente"},
+  {"pergunta":"Spring Boot PostgreSQL stack recomendada", "fontes":["plano-v1-2","contexto"], "evidencia":"PostgreSQL 18"},
+  {"pergunta":"GuardrailDeAutoria defesa em camadas", "fontes":["plano-v1-2","contexto"], "evidencia":"determinístic"},
+  {"pergunta":"RNF04 identificadores treinamento API", "fontes":["ers-v2","plano-v1-2"], "evidencia":"treinamento|treina"},
+  {"pergunta":"151 h reserva capacidade", "fontes":["plano-v1-2","decisoes-v1-2","contexto"], "evidencia":"5 h"},
+  {"pergunta":"M4 etapas interface Semana 4", "fontes":["decisoes-v1-2","plano-v1-2","contexto"], "evidencia":"M4"},
+  {"pergunta":"coorte classificação risco moderado", "fontes":["poc-2-2","ers-v2"], "evidencia":"[Cc]oorte de entrada 2"},
+  {"pergunta":"hipótese autoria autorregulação dependência", "fontes":["poc-2-2","ers-v2","contexto"], "evidencia":"autorregulação"},
+  {"pergunta":"Ollama modelo local", "historico":true, "fontes":["plano-v1-1","plano-v1-2"], "evidencia":"Ollama"},
+  {"pergunta":"fotossíntese cloroplasto", "fontes":[], "evidencia":""}
+]

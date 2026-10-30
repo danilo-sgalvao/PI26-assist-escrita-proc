@@ -1,0 +1,50 @@
+{
+  "id": "adr-006-bedrock",
+  "caminho": "docs/arquitetura/ADR-006-bedrock.md",
+  "titulo": "ADR-006 Acesso ao modelo pelo AWS Bedrock",
+  "versao": "0.1",
+  "estado": "vigente",
+  "papel": "arquitetura proposta",
+  "precedencia": 3,
+  "sha256": "5d2c41e9cac0d9263f510517465e9109851506853f6d2b82d815f44a98056634",
+  "unidades": 4,
+  "caracteres": 2096,
+  "conteudo": [
+    {
+      "texto": "# ADR-006 Acesso ao modelo pelo AWS Bedrock\n\n| Campo | Valor |\n|---|---|\n| Versão | 0.1 |\n| Data | 30/10/2026 |\n| Autor | Preparado com apoio de IA (Codex) |\n| Revisor | A definir |\n| Estado | Proposto; validação do experimento pendente |\n",
+      "secao": "ADR-006 Acesso ao modelo pelo AWS Bedrock",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 1,
+        "fim": 10
+      }
+    },
+    {
+      "texto": "## Contexto e decisão\n\nO usuário definiu AWS Bedrock como serviço de IA para o backend. O modelo, a região e o mecanismo de integração definitivo permanecem em avaliação. A prova técnica isolada utiliza AWS SDK para Java 2 e a API Converse; Spring AI permanece alternativa para o adaptador definitivo na etapa 3. O experimento usa exclusivamente um prompt sintético fixo e não expõe endpoint HTTP.\n",
+      "secao": "ADR-006 Acesso ao modelo pelo AWS Bedrock > Contexto e decisão",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 11,
+        "fim": 14
+      }
+    },
+    {
+      "texto": "## Resultado do spike nesta máquina\n\nEm 30/10/2026 não foram encontrados `AWS_REGION`, `BEDROCK_MODEL_ID`, `AWS_PROFILE`, `AWS_ACCESS_KEY_ID`, `AWS_WEB_IDENTITY_TOKEN_FILE` nem arquivos locais padrão de configuração/credenciais AWS. Não foi feita chamada real: acesso, modelos disponíveis, latência, qualidade e custo não foram medidos. Responsável pelo desbloqueio: equipe do projeto, a definir.\n\nApós configurar credenciais apropriadas, região e modelo, executar o procedimento de [backend/README.md](../../backend/README.md). Registrar modelo, região, disponibilidade, custo, tokens, latência, qualidade e termos de tratamento de dados; comparar opções antes de aceitar este ADR. Observar processamento entre regiões e registros de invocação na configuração escolhida. Não usar dados reais até a avaliação de privacidade e os consentimentos necessários.\n",
+      "secao": "ADR-006 Acesso ao modelo pelo AWS Bedrock > Resultado do spike nesta máquina",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 15,
+        "fim": 20
+      }
+    },
+    {
+      "texto": "## Segurança e limitações\n\nO SDK usa a cadeia padrão de credenciais; preferir credenciais temporárias e permissões mínimas para invocação. Configurar orçamento e monitoramento na conta AWS. O resultado do experimento não é implementação do assistente pedagógico: classificação, validação de saída e controle de autoria pertencem à etapa 3.\n\nReferências: [AWS — Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html); [AWS SDK para Java — exemplos Bedrock](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/java_bedrock-runtime_code_examples.html).",
+      "secao": "ADR-006 Acesso ao modelo pelo AWS Bedrock > Segurança e limitações",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 21,
+        "fim": 25
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "poc-2-2",
+  "caminho": "docs/referencias/POC 2.2. Assistente de escrita processual.pdf",
+  "titulo": "Enunciado da POC 2.2",
+  "versao": "original",
+  "estado": "referencia",
+  "papel": "enunciado",
+  "precedencia": 4,
+  "transcricao": "transcricoes/poc-2-2.json",
+  "sha256": "39479246d55eca7d6f0b6f0d723a658e3d86c35cdd1b40b51327e5d9e4103d84",
+  "unidades": 1,
+  "caracteres": 801,
+  "sha256_transcricao": "31d1f4d0a6edf1a991748c29260b6c8efd0710c1bba68aa706bac3987e48f98c",
+  "conteudo": [
+    {
+      "texto": "Documento Complementar:\nhttps://www.gov.br/mec/pt-br/escolas-conectadas/arquivos/ia-basica.pdf\n\n[Transcrição visual da imagem]\nPOC 2.2. Assistente de escrita processual\nClassificação de risco. Moderado. Coorte de entrada 2.\nHipótese de teste. O acompanhamento por etapas desenvolve autoria e autorregulação sem gerar dependência ou plágio assistido.\nSalvaguardas na experimentação. Vedação de produção de texto em nome do estudante. Registro do processo de escrita para o professor. Testagem de efeitos de dependência em uso prolongado.\nRequisitos de dados. Versões e etapas das produções textuais dos estudantes participantes.\nMétricas de saída. Qualidade da produção final. Indicadores de autonomia progressiva, com redução do apoio solicitado ao longo do tempo. Originalidade verificada dos textos.",
+      "secao": "Página 1",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 1,
+        "fim": 1
+      },
+      "transcricao_visual": "transcricoes/poc-2-2.json"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "id": "ers-v1",
+  "caminho": "docs/ers/v1.0/ESPECIFICAÇÃO DE REQUISITOS DE SOFTWARE – ERS GRUPO 8.pdf",
+  "titulo": "Especificação de Requisitos de Software v1.0",
+  "versao": "1.0",
+  "estado": "historico",
+  "papel": "requisitos",
+  "precedencia": 5,
+  "sha256": "a00f7faa6a0cbfc54230f266395429af99948c8111f96126dc563705913e97b8",
+  "unidades": 7,
+  "caracteres": 9571,
+  "conteudo": [
+    {
+      "texto": "ESPECIFICAÇÃO DE REQUISITOS DE\nSOFTWARE – ERS\n\n\nGrupo 8: Enzo Machado, Danilo Galvão, Luiz Augusto\nGodinho, Felipe Nunes\n\nSistema: Assistente de Escrita Processual\n\n1. Introdução\n\nEste documento apresenta a Especificação de Requisitos de Software – ERS do sistema\nAssistente de Escrita Processual, desenvolvido como prova de conceito para apoio ao\nprocesso de produção textual de estudantes.\n\nO sistema tem como finalidade acompanhar as etapas de elaboração de textos, oferecendo\norientações e feedbacks durante a escrita, sem substituir a autoria do estudante. A proposta\nbusca estimular a autonomia, a autorregulação e o desenvolvimento progressivo da\ncapacidade de escrita, mantendo registros das versões produzidas e das interações\nrealizadas com o assistente.\n\nO sistema deverá preservar a participação ativa do estudante durante todo o processo de\nprodução textual, não sendo permitido que a ferramenta produza integralmente o trabalho\nem nome do usuário.\n\n\n\n2. Objetivo do Sistema\n\nO objetivo do Assistente de Escrita Processual é oferecer suporte ao estudante durante o\ndesenvolvimento de produções textuais, permitindo:\n\n    ●   elaboração e edição de textos;\n    ●   registro de diferentes versões da produção;\n    ●   acompanhamento da evolução da escrita;\n    ●   solicitação de apoio e orientação;\n    ●   registro das interações realizadas com o assistente;\n    ●   acompanhamento do nível de utilização da ferramenta;\n    ●   acompanhamento do processo pelo professor;\n    ●   submissão da produção final;\n    ●   verificação de similaridade e originalidade do texto.",
+      "secao": "Página 1",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 1,
+        "fim": 1
+      }
+    },
+    {
+      "texto": "O sistema deverá atuar como ferramenta de apoio, incentivando o estudante a desenvolver\no próprio texto e reduzindo gradualmente sua dependência do assistente.\n\n\n\n3. Escopo\n\nO sistema será utilizado em atividades acadêmicas de produção textual nas quais seja\nrelevante acompanhar não apenas o resultado final, mas também o processo de\ndesenvolvimento da escrita.\n\nO estudante poderá produzir e revisar seus textos dentro da plataforma, solicitar\norientações ao assistente e consultar versões anteriores.\n\nO professor poderá acompanhar a evolução da produção, consultar o histórico de versões e\ninterações e analisar indicadores relacionados ao processo de escrita do estudante.\n\nA ferramenta não deverá substituir a atividade intelectual do estudante nem produzir\nautomaticamente a atividade completa.\n\n\n\n4. Atores do Sistema\n\n4.1 Estudante\n\nUsuário responsável pela elaboração da produção textual. Poderá criar, editar, revisar e\nsubmeter textos, bem como solicitar apoio ao assistente.\n\n4.2 Professor\n\nUsuário responsável pela criação das atividades e pelo acompanhamento das produções\ndos estudantes. Poderá consultar versões, interações e evolução do processo de escrita.\n\n4.3 Assistente de Escrita\n\nComponente responsável por fornecer orientações, sugestões e feedbacks ao estudante,\nrespeitando as limitações definidas para preservação da autoria.\n\n\n\n5. Requisitos Funcionais\n\nRF01 – Criar atividade de escrita\n\nO sistema deverá permitir que o professor cadastre uma atividade de produção textual,\ninformando título, tema, descrição, orientações e prazo para realização.",
+      "secao": "Página 2",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 2,
+        "fim": 2
+      }
+    },
+    {
+      "texto": "RF02 – Iniciar produção textual\n\nO sistema deverá permitir que o estudante inicie uma produção textual vinculada a uma\natividade cadastrada.\n\n\n\nRF03 – Editar produção textual\n\nO sistema deverá disponibilizar um ambiente para que o estudante escreva, altere e\nreorganize seu próprio texto durante o desenvolvimento da atividade.\n\n\n\nRF04 – Salvar versões do texto\n\nO sistema deverá registrar versões sucessivas da produção textual, armazenando o\nconteúdo, a data e o horário de cada versão salva.\n\n\n\nRF05 – Consultar histórico de versões\n\nO sistema deverá permitir que o estudante e o professor consultem as versões anteriores\nda produção textual.\n\n\n\nRF06 – Comparar versões do texto\n\nO sistema deverá permitir a comparação entre diferentes versões do texto, destacando\nalterações, inserções e exclusões realizadas pelo estudante ao longo do processo de\nescrita.\n\n\n\nRF07 – Solicitar apoio do assistente\n\nO sistema deverá permitir que o estudante solicite apoio durante a elaboração do texto, de\nacordo com suas necessidades.\n\n\n\nRF08 – Fornecer orientações sobre a escrita\n\nO sistema deverá fornecer orientações relacionadas à estrutura, clareza, coesão, coerência,\nargumentação e organização do texto.",
+      "secao": "Página 3",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 3,
+        "fim": 3
+      }
+    },
+    {
+      "texto": "RF09 – Limitar a geração de conteúdo pelo assistente\n\nO sistema deverá limitar sua atuação ao fornecimento de orientações, sugestões e\nfeedbacks, evitando a produção integral do texto em nome do estudante.\n\n\n\nRF10 – Registrar interações com o assistente\n\nO sistema deverá armazenar as solicitações realizadas pelo estudante e as respectivas\norientações fornecidas pelo assistente durante o processo de escrita.\n\n\n\nRF11 – Registrar o progresso da produção textual\n\nO sistema deverá registrar informações sobre a evolução da produção, considerando as\nversões criadas, as alterações realizadas e as interações com o assistente.\n\n\n\nRF12 – Acompanhar o nível de apoio solicitado\n\nO sistema deverá registrar a frequência e o tipo de apoio solicitado pelo estudante,\npermitindo acompanhar mudanças no nível de utilização e dependência da ferramenta ao\nlongo do tempo.\n\n\n\nRF13 – Permitir acompanhamento pelo professor\n\nO sistema deverá permitir que o professor acompanhe o processo de produção textual do\nestudante, incluindo histórico de versões, interações com o assistente e evolução do texto.\n\n\n\nRF14 – Submeter a versão final\n\nO sistema deverá permitir que o estudante finalize sua produção e envie uma versão\ndefinitiva para avaliação do professor, mantendo registradas as versões anteriores.\n\n\n\nRF15 – Verificar similaridade e originalidade do texto",
+      "secao": "Página 4",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 4,
+        "fim": 4
+      }
+    },
+    {
+      "texto": "O sistema deverá permitir a realização de análise de similaridade textual e apresentar\ninformações que auxiliem na verificação da originalidade da produção, sem substituir a\navaliação do professor.\n\n\n\n6. Regras de Negócio\n\nRN01 – Preservação da autoria\nO conteúdo principal da produção deverá ser desenvolvido pelo estudante.\n\nRN02 – Proibição de geração integral\nO assistente não deverá produzir integralmente a atividade em nome do estudante.\n\nRN03 – Registro do processo de escrita\nAs principais etapas da produção deverão ser registradas, incluindo versões e interações\ncom o assistente.\n\nRN04 – Manutenção do histórico\nAs versões anteriores da produção não deverão ser excluídas quando uma nova versão for\ncriada.\n\nRN05 – Acompanhamento pedagógico\nAs informações sobre utilização do assistente deverão servir como apoio ao\nacompanhamento do estudante, e não como critério automático de avaliação.\n\nRN06 – Avaliação humana da originalidade\nA análise de similaridade deverá fornecer informações de apoio, cabendo ao professor\navaliar a originalidade e a autoria do texto.\n\n\n\n7. Fluxo Principal do Sistema\n\nO professor cria uma atividade de produção textual e disponibiliza as orientações ao\nestudante.\n\nO estudante acessa a atividade e inicia sua produção.\n\nDurante a elaboração, o estudante escreve e edita o próprio texto, podendo salvar\ndiferentes versões.\n\nCaso necessite de apoio, o estudante solicita orientação ao assistente.\n\nO assistente analisa a solicitação e fornece sugestões e feedbacks, sem produzir\nintegralmente o texto.",
+      "secao": "Página 5",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 5,
+        "fim": 5
+      }
+    },
+    {
+      "texto": "As interações com o assistente e as diferentes versões do texto são registradas pelo\nsistema.\n\nO estudante utiliza as orientações recebidas para revisar e aperfeiçoar sua produção.\n\nO professor pode acompanhar a evolução do texto, as versões geradas e as interações\nrealizadas com o assistente.\n\nAo concluir a atividade, o estudante submete a versão final.\n\nO sistema poderá realizar análise de similaridade textual e apresentar os resultados ao\nprofessor para auxiliar na avaliação da originalidade.\n\n\n\n8. Salvaguardas do Sistema\n\nO sistema deverá implementar mecanismos destinados a preservar a autoria e a autonomia\ndo estudante.\n\nO assistente deverá ser configurado para fornecer orientação e feedback, evitando produzir\natividades completas em nome do usuário.\n\nTodas as interações relevantes com o assistente deverão ser registradas para permitir o\nacompanhamento do processo de produção textual.\n\nO sistema deverá ainda possibilitar a análise da utilização da ferramenta ao longo do tempo,\npermitindo identificar eventual dependência excessiva do estudante em relação ao\nassistente.\n\n\n\n9. Métricas de Avaliação da POC\n\nA avaliação da prova de conceito poderá considerar os seguintes indicadores:\n\nQualidade da produção final: comparação da evolução do texto entre as diferentes\nversões produzidas.\n\nAutonomia progressiva: análise da capacidade do estudante de desenvolver e revisar o\npróprio texto ao longo das atividades.\n\nRedução do apoio solicitado: análise da quantidade e do tipo de auxílio solicitado ao\nassistente ao longo do tempo.\n\nOriginalidade dos textos: análise dos resultados obtidos nas verificações de similaridade e\nda evolução da produção do próprio estudante.\n\n",
+      "secao": "Página 6",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 6,
+        "fim": 6
+      }
+    },
+    {
+      "texto": "10. Considerações Finais\n\nO Assistente de Escrita Processual deverá funcionar como uma ferramenta de apoio ao\nprocesso de aprendizagem, e não como substituto da atividade intelectual do estudante.\n\nA solução deverá priorizar o acompanhamento do processo de escrita, o registro das etapas\nde produção e o desenvolvimento progressivo da autonomia do usuário.\n\nA combinação entre histórico de versões, registro das interações, acompanhamento pelo\nprofessor e mecanismos de apoio controlado permitirá avaliar não apenas a qualidade do\nproduto final, mas também a forma como o estudante desenvolveu sua produção textual ao\nlongo da atividade.\n\n",
+      "secao": "Página 7",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 7,
+        "fim": 7
+      }
+    }
+  ]
+}
