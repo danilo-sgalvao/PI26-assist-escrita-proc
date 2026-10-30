@@ -1,0 +1,14 @@
+[
+  {"id":"contexto","caminho":"CLAUDE.md","titulo":"Contexto e fatos confirmados do projeto","versao":"2026-10-29","estado":"vigente","papel":"contexto","precedencia":1},
+  {"id":"poc-2-2","caminho":"docs/referencias/POC 2.2. Assistente de escrita processual.pdf","titulo":"Enunciado da POC 2.2","versao":"original","estado":"referencia","papel":"enunciado","precedencia":4,"transcricao":"transcricoes/poc-2-2.json"},
+  {"id":"apresentacao","caminho":"docs/referencias/AssistentedeEscritaProcessual_2.pdf","titulo":"Apresentação ao stakeholder","versao":"original","estado":"referencia","papel":"apresentacao","precedencia":4},
+  {"id":"ers-v1","caminho":"docs/ers/v1.0/ESPECIFICAÇÃO DE REQUISITOS DE SOFTWARE – ERS GRUPO 8.pdf","titulo":"Especificação de Requisitos de Software v1.0","versao":"1.0","estado":"historico","papel":"requisitos","precedencia":5},
+  {"id":"ers-v2","caminho":"docs/ers/v2/ERS-Grupo8-v2.md","titulo":"Especificação de Requisitos de Software v2.0","versao":"2.0","estado":"vigente","papel":"requisitos","precedencia":2},
+  {"id":"ers-v2-word","caminho":"docs/ers/v2/ERS-Grupo8-v2.docx","titulo":"ERS v2.0 em Word","versao":"2.0","estado":"representacao","papel":"requisitos","precedencia":2,"representacao_de":"ers-v2"},
+  {"id":"plano-v1-1","caminho":"docs/plano/v1.1/PDS_Assistente_Escrita_Processual_v1.1.docx","titulo":"Plano mestre v1.1 editável","versao":"1.1","estado":"historico","papel":"plano","precedencia":5,"transcricao":"transcricoes/diagramas-plano-v1-1.json"},
+  {"id":"plano-v1-1-pdf","caminho":"docs/plano/v1.1/Plano_Mestre_Assistente_Escrita_Processual_v1.1.pdf","titulo":"Plano mestre v1.1 em PDF","versao":"1.1","estado":"representacao","papel":"plano","precedencia":5,"representacao_de":"plano-v1-1"},
+  {"id":"decisoes-v1-2","caminho":"docs/plano/v1.2/decisoes-plano-v1.2.md","titulo":"Decisões B1–B12 e mudanças do plano v1.2","versao":"0.2","estado":"vigente","papel":"decisoes","precedencia":1},
+  {"id":"plano-v1-2","caminho":"docs/plano/v1.2/plano-mestre-v1.2.md","titulo":"Plano mestre v1.2","versao":"1.2","estado":"vigente","papel":"plano","precedencia":3},
+  {"id":"plano-v1-2-word","caminho":"docs/plano/v1.2/plano-mestre-v1.2.docx","titulo":"Plano mestre v1.2 em Word","versao":"1.2","estado":"representacao","papel":"plano","precedencia":3,"representacao_de":"plano-v1-2"},
+  {"id":"adr-006-bedrock","caminho":"docs/arquitetura/ADR-006-bedrock.md","titulo":"ADR-006 Acesso ao modelo pelo AWS Bedrock","versao":"0.1","estado":"vigente","papel":"arquitetura proposta","precedencia":3}
+]
