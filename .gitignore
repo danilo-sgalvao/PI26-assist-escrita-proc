@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+conhecimento/gerado/indice.sqlite3*
+backend/target/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,95 @@
+{
+  "id": "apresentacao",
+  "caminho": "docs/referencias/AssistentedeEscritaProcessual_2.pdf",
+  "titulo": "Apresentação ao stakeholder",
+  "versao": "original",
+  "estado": "referencia",
+  "papel": "apresentacao",
+  "precedencia": 4,
+  "sha256": "8596dd57d6ab43f9bf5cbf778cc60817e14677d33270c675e351b7830e197e38",
+  "unidades": 9,
+  "caracteres": 7720,
+  "conteudo": [
+    {
+      "texto": "Manutenção de Software • Grupo 8\nAssistente de\nEscrita Processual\n\nUma IA que orienta a escrita, sem escrever pelo estudante.\n\n\nEnzo Machado • Danilo Galvão • Luiz Augusto Godinho • Felipe Nunes",
+      "secao": "Página 1",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 1,
+        "fim": 1
+      }
+    },
+    {
+      "texto": "O problema\nA IA já entrou na escrita dos estudantes\n\n\n   Quando a IA escreve, o aluno deixa                                        O professor só vê o produto final\n   de escrever                                                               Sem acesso às etapas, é difícil saber como o texto\n   O texto pronto pula justamente as etapas em                               foi construído e onde o aluno precisou de ajuda.\n   que se aprende: planejar, formular e revisar as\n   próprias ideias.\n\n\n\n\n\n\n\n\n\n    O risco é o “descarregamento cognitivo”: deixar que a IA faça o trabalho de pensar no lugar do estudante.\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       01",
+      "secao": "Página 2",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 2,
+        "fim": 2
+      }
+    },
+    {
+      "texto": "A proposta\nAcompanhar a escrita como processo\n\nO estudante escreve o próprio texto na plataforma, e a IA atua como orientadora em cada etapa.\n\n\n\n  1                                    2                                    3                                    4\n  Planejar                             Escrever                             Revisar                              Reescrever\n  O aluno organiza a tese              O texto é sempre do                  A IA aponta problemas e              O aluno decide o que\n  e as ideias.                         próprio aluno.                       faz perguntas.                       mudar e como.\n\n\n\n\n\n\n\n    O que queremos investigar: acompanhar a escrita por etapas ajuda o aluno a ganhar autoria e autonomia,\n    sem criar dependência da IA?\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       02",
+      "secao": "Página 3",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 3,
+        "fim": 3
+      }
+    },
+    {
+      "texto": "Como funcionaria\nUm percurso simples para professor e aluno\n\n\n\n\n          01                             02                            03                            04                            05\n     Professor                        Aluno                           IA                      Plataforma                     Professor\n  propõe a atividade                 escreve o                   orienta, sem                   guarda cada                  acompanha a\n                                   próprio texto                    escrever                       versão                       evolução\n\n\n\n\n\n\n\n\n\n\n                                       O professor continua sendo quem orienta e avalia.\n                                       A IA é um apoio entre uma versão e outra do texto.\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       03",
+      "secao": "Página 4",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 4,
+        "fim": 4
+      }
+    },
+    {
+      "texto": "Na prática\nA IA orienta, mas não escreve\n\n\n\n                    Estudante: Pode reescrever minha conclusão? Acho que                             O que a IA observa\n                    ficou fraca.                                                                         Estrutura e organização\n                                                                                                         Coesão e coerência\n                                                                                                         Argumentação\n   Assistente: Não vou reescrever, mas posso ajudar você a fortalecê-                                    Adequação ao gênero\n   la. Pense nestas perguntas:\n       Sua conclusão retoma a tese da introdução?                                                    O que a IA não faz\n       Qual foi o seu argumento mais forte? Ele aparece no final?\n       Que ideia você quer que o leitor guarde?                                                          Reescrever trechos do aluno\n                                                                                                         Completar o texto\n                                                                                                         Dar nota\n\n\n\n\n\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       04",
+      "secao": "Página 5",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 5,
+        "fim": 5
+      }
+    },
+    {
+      "texto": "O papel do professor\nO professor passa a ver o caminho do texto\n                                                                                                   \n   Versões lado a lado                              Conversas com a IA                               Evolução entre\n   Comparar o primeiro rascunho                     Saber em que pontos o                            atividades\n   com a versão final e ver o que o                 aluno pediu ajuda e que                          Perceber se o aluno passa a\n   aluno mudou.                                     orientação recebeu.                              revisar mais sozinho e a pedir\n                                                                                                     menos ajuda.\n\n\n\n\n\n\n    Com isso, as devolutivas podem tratar do processo, e não só do produto. A avaliação continua sendo\n    do professor.\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       05",
+      "secao": "Página 6",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 6,
+        "fim": 6
+      }
+    },
+    {
+      "texto": "Cuidados\nOs riscos que a proposta leva em conta\n\n\n   Textos padronizados                                                         Variação linguística e criatividade\n   A IA orienta por perguntas, sem oferecer modelo                             As orientações olham o texto como um todo; escolhas\n   pronto. O estilo continua sendo do aluno.                                   criativas não são tratadas como erro.\n\n\n\n   Dependência da ferramenta                                                   Exposição do aluno\n   O uso da IA é acompanhado ao longo do tempo. O                              O aluno sabe o que fica registrado. Os dados servem ao\n   objetivo é que o aluno precise dela cada vez menos.                         acompanhamento, nunca a rankings ou vigilância.\n\n\n\n\n\n\n\n\n\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       06",
+      "secao": "Página 7",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 7,
+        "fim": 7
+      }
+    },
+    {
+      "texto": "Como saber se funciona\nO que observar ao longo das atividades\n\n\n   Qualidade do texto              Comparar a primeira e a última versão, com os critérios do próprio professor.\n\n   Autonomia                              Ver se o aluno passa a revisar mais por conta própria.\n\n   Menos ajuda                          Acompanhar se os pedidos à IA diminuem de uma atividade para outra.\n\n   Autoria                                    Confirmar que o texto final é do aluno, com apoio da verificação de originalidade.\n\n\n\n\n\n\n\n   Primeiro passo: uma demonstração com                                            Depois: um piloto com uma turma, por\n   uma atividade.                                                                  algumas semanas.\n\n\n\n\nASSISTENTE DE ESCRITA PROCESSUAL • GRUPO 8                                                                                                                                                       07",
+      "secao": "Página 8",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 8,
+        "fim": 8
+      }
+    },
+    {
+      "texto": "Ideia central\nNão é a IA escrevendo pelo\nestudante.\nÉ a IA ajudando o estudante a escrever melhor, e o\nprofessor a acompanhar esse caminho.\n\n\n\nObrigado! Ficamos à disposição para perguntas.\n\n\n\n\n\n\n\nEnzo Machado • Danilo Galvão • Luiz Augusto Godinho • Felipe Nunes",
+      "secao": "Página 9",
+      "localizacao": {
+        "tipo": "pagina",
+        "inicio": 9,
+        "fim": 9
+      }
+    }
+  ]
+}

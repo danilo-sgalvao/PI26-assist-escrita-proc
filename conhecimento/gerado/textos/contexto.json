@@ -1,0 +1,86 @@
+{
+  "id": "contexto",
+  "caminho": "CLAUDE.md",
+  "titulo": "Contexto e fatos confirmados do projeto",
+  "versao": "2026-10-29",
+  "estado": "vigente",
+  "papel": "contexto",
+  "precedencia": 1,
+  "sha256": "0398cd382d1adf94b6363a901ae34ce575e5c80e17759b3042bb708619c5845b",
+  "unidades": 8,
+  "caracteres": 9294,
+  "conteudo": [
+    {
+      "texto": "# Assistente de Escrita Processual — Grupo 8\n\nTrabalho da disciplina **Manutenção de Software** (UFG, 6º semestre). Prova de conceito (POC 2.2) de uma plataforma em que o estudante escreve o próprio texto e uma IA **orienta sem escrever**, enquanto o professor acompanha o processo (versões, interações, evolução).\n\n**Equipe:** Danilo Galvão, Enzo Machado, Felipe Nunes, Luiz Augusto Godinho.\n**Idioma:** todo o conteúdo (documentos, código, commits, issues) é em português do Brasil.\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 1,
+        "fim": 7
+      }
+    },
+    {
+      "texto": "## Arquivos da pasta\n\nTodos os documentos ficam em `docs/`, que já corresponde à pasta `docs/` do futuro monorepo. Organização:\n- `referencias/`: material externo ou apresentado, somente leitura;\n- `ers/`: uma subpasta por versão da ERS;\n- `plano/`: uma subpasta por versão do plano.\n\nVersões antigas não são apagadas nem sobrescritas.\n\n| Arquivo | O que é | Situação |\n|---|---|---|\n| `docs/referencias/POC 2.2. Assistente de escrita processual.pdf` | Enunciado da POC: risco moderado, hipótese, salvaguardas, requisitos de dados e métricas de saída | Fonte externa (não editar) |\n| `docs/referencias/AssistentedeEscritaProcessual_2.pdf` | Slides apresentados ao stakeholder (linguagem não técnica) | Referência |\n| `docs/ers/v1.0/ESPECIFICAÇÃO DE REQUISITOS DE SOFTWARE – ERS GRUPO 8.pdf` | ERS v1.0 original: RF01–RF15, RN01–RN06 | Superada pela v2 |\n| `docs/ers/v2/ERS-Grupo8-v2.md` | ERS v2.0 revisada; **o `.md` é a fonte** | Base de requisitos; em revisão pela equipe |\n| `docs/ers/v2/ERS-Grupo8-v2.docx` | Versão Word gerada a partir do `.md` (capa, sumário, A4) | Regerar sempre que o `.md` mudar |\n| `docs/plano/v1.1/PDS_Assistente_Escrita_Processual_v1.1.docx` | Plano mestre v1.1 editável (Word) | Base para a v1.2; não editar |\n| `docs/plano/v1.1/Plano_Mestre_Assistente_Escrita_Processual_v1.1.pdf` | PDF do plano mestre v1.1 (processo, arquitetura, stack, cronograma, qualidade, riscos) | Proposta para aprovação da equipe e do professor |\n| `docs/plano/v1.2/decisoes-plano-v1.2.md` | Decisões B1–B12 e registro das mudanças aplicadas no plano v1.2 (seção E) | B5 e B10 pendentes |\n| `docs/plano/v1.2/plano-mestre-v1.2.md` | Plano mestre v1.2, enriquecido com a ERS v2; **o `.md` é a fonte** (diagramas em Mermaid) | Proposta para aprovação da equipe e do professor |\n| `docs/plano/v1.2/plano-mestre-v1.2.docx` | Versão Word gerada a partir do `.md` (diagramas renderizados, sumário, tabelas largas em paisagem) | Regerar sempre que o `.md` mudar |\n\nO texto da POC é curto. O documento complementar dela é https://www.gov.br/mec/pt-br/escolas-conectadas/arquivos/ia-basica.pdf.\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Arquivos da pasta",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 8,
+        "fim": 31
+      }
+    },
+    {
+      "texto": "## Hipótese e regras centrais\n\n- **Hipótese da POC:** acompanhar a escrita por etapas desenvolve autoria e autorregulação sem gerar dependência nem plágio assistido.\n- **Métricas:** qualidade da produção final, autonomia progressiva (redução do apoio solicitado ao longo das atividades) e originalidade verificada.\n- **Regras que não se negociam:** a IA não escreve, não reescreve, não completa nem parafraseia o texto do aluno (RN01/RN02); o histórico de versões nunca é apagado (RN04); indicadores não viram nota, ranking ou vigilância (RN05); a similaridade apenas apoia a avaliação, e quem decide sobre originalidade é o professor (RN06).\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Hipótese e regras centrais",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 32,
+        "fim": 37
+      }
+    },
+    {
+      "texto": "## Fatos confirmados pela equipe (não mudar sem aprovação)\n\n- Prazo de **6 semanas** até a entrega final; quatro integrantes.\n- Frontend em **React + TypeScript**.\n- Assistente baseado em **LLM acessado por API externa** (decisão B1, 29/10/2026, que substitui o \"LLM local\" do plano v1.1). Provedor e modelo serão escolhidos no spike T07 (ADR-006). Por isso valem três cuidados:\n  - nunca enviar nome ou outros identificadores do aluno à API;\n  - usar provedor que não treine com os dados;\n  - o termo de ciência (RF21) informa o processamento externo.\n- Persistência e acesso a dados em **Java** (exigência do enunciado).\n- Similaridade (RF15) compara a produção com **textos internos** (outras produções da atividade) e com as **respostas do assistente** (decisão B2). Base externa e serviço antiplágio ficam como evolução futura (*Won't* nesta entrega), mesmo os stakeholders tendo citado produção externa.\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Fatos confirmados pela equipe (não mudar sem aprovação)",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 38,
+        "fim": 48
+      }
+    },
+    {
+      "texto": "## Propostas do plano mestre (valem até virar ADR ou mudança aprovada)\n\n- **Processo:** iterativo, baseado em Scrum, com sprints de 1 semana e quadro Kanban (WIP ≤ 4 em desenvolvimento e ≤ 4 em revisão). Marcos M1–M6, um por semana. Cronograma relativo (Semana 1–6, dias D1–D5), porque D0 ainda não foi definido.\n- **Áreas e revisão em anel:** A = Requisitos/Produto/Qualidade (Product Owner), B = Frontend, C = Backend/API/Assistente, D = Persistência/Dados/Infra. Anel de revisão A→B→C→D→A; o autor nunca aprova o próprio trabalho. Ainda falta definir quem fica em cada área (tarefa T01).\n- **Arquitetura:** SPA + monólito modular com portas e adaptadores. Módulos: `identidade`, `atividades`, `producao`, `apoio`, `acompanhamento`, `similaridade`, `compartilhado`.\n- **Stack:**\n  - Java 25 + Spring Boot 4.x (Maven); Spring Data JPA/Hibernate, PostgreSQL 18 e Flyway;\n  - Spring Security com sessão, cookie HttpOnly e CSRF;\n  - Spring AI com adaptador para a API externa de LLM (provedor e modelo definidos no spike T07, ADR-006); na CI, adaptador falso, e a chave da API fica fora do repositório;\n  - java-diff-utils para o diff por palavras;\n  - Vite, Vitest e Testing Library no frontend;\n  - JUnit, Testcontainers e ArchUnit no backend;\n  - GitHub Actions; Docker Compose local.\n- **Defesa da RN02 em camadas:** classificação da solicitação (pedido de escrita recebe recusa explícita), prompt de sistema versionado, texto do aluno delimitado e sem identificadores, validador determinístico de saída (`GuardrailDeAutoria`), registro de bloqueios e proteção do prompt. O validador é a garantia final, não o prompt.\n- **Similaridade:** contenção de n-gramas de palavras (n = 5), sem veredito de plágio.\n- **Versões:** imutáveis (append-only, com UPDATE/DELETE bloqueados no banco); o progresso é calculado a partir delas, sem tabela duplicada.\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Propostas do plano mestre (valem até virar ADR ou mudança aprovada)",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 49,
+        "fim": 65
+      }
+    },
+    {
+      "texto": "## Convenções\n\n- **IDs:**\n  - RF01–RF15 e RN01–RN06 mantêm a numeração da ERS original; itens novos são acrescentados ao final da sequência.\n  - Demais prefixos: HU-nn / CA-nn.m, Q-xx / H-xx, ADR-nnn, Tnn, CT-nn.m, DEF-nnn, Rnn, MUD-nnn.\n  - O nome do teste cita o CA (ex.: `deveRejeitarEdicaoAposSubmissao_CA14_2`).\n- **Valores numéricos ainda não validados** aparecem marcados como *(sugerido)* ou \"proposta\".\n- **Git (quando o repositório existir):**\n  - monorepo `backend/`, `frontend/`, `infra/`, `docs/`, `.github/`;\n  - GitHub Flow com branches `tipo/Txx-descricao` de no máximo 2 dias e squash merge;\n  - Conventional Commits em português citando a issue (`feat(apoio): valida limite de palavras (#26)`);\n  - PR segue o modelo do Apêndice C do plano, com a seção \"Design do incremento\".\n- **Documentos:** em Markdown, com cabeçalho de título, versão, data, autor, revisor e estado. Uso de IA é sempre declarado (Apêndice D do plano).\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Convenções",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 66,
+        "fim": 79
+      }
+    },
+    {
+      "texto": "## Hierarquia entre os documentos\n\n1. **Fatos confirmados pela equipe** (seção acima) valem sobre tudo.\n2. **ERS v2** (`docs/ers/v2/ERS-Grupo8-v2.md`, versão 2.0) é a base de requisitos. O plano mestre **não** está acima dela. Não editar a ERS sem pedido explícito: divergências com o plano ou com os fatos confirmados são levadas ao grupo, não corrigidas por conta própria. A divergência conhecida hoje: o RF15 da ERS cita base externa na similaridade, mas a decisão B2 limita a similaridade a textos internos.\n3. **Plano mestre** define processo, arquitetura, stack e cronograma. Versão vigente: **plano v1.2** (`docs/plano/v1.2/plano-mestre-v1.2.md`), já enriquecido com a ERS v2. O que mudou em relação à v1.1, e por quê, está em `docs/plano/v1.2/decisoes-plano-v1.2.md`.\n",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Hierarquia entre os documentos",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 80,
+        "fim": 85
+      }
+    },
+    {
+      "texto": "## Pontos de atenção\n\n- O **cronograma é fixo** (B12): 6 semanas, 10 h por pessoa por semana. A v1.2 tem 151 h de tarefas (a v1.1 tinha 144 h) e 5 h de reserva. A área B (frontend) só tem 0,5 h de reserva. Nenhuma área passa de 6,5 h de tarefas por semana.\n- **Prioridades (MoSCoW):**\n  - *Must*: RF01–RF10, RF13, RF14, RF16, RF17, RF21, RF22;\n  - *Should*: RF11, RF12, RF15, RF18, RF20;\n  - *Could*: RF19 (tarefa T64, fora da base).\n- **Ordem de corte:** RF19 → RF20 → RF11/RF12 → RF15 → destaque do RF18.\n- As etapas (RF17) só aparecem na interface na Semana 4 (M4).\n- **Tarefas novas:** T60, T61, T63, T64, T65. **Tarefas removidas:** T38 e T44.\n- **Regerar o `.docx` do plano:** usar o conversor do Markdown com Mermaid renderizado pelo mermaid-cli (Chrome local) e atualizar o sumário no Word. Os scripts ficam no scratchpad da sessão, não no repositório.\n- Divergências entre ERS v2 e plano v1.1 já decididas a favor da ERS:\n  - salvamento automático + versões marcadas por etapa;\n  - prazo configurável pelo professor (padrão: aceita e marca atrasada);\n  - categorias de apoio dos slides + \"pedido de escrita\";\n  - similaridade automática após a submissão.\n\n  A priorização segue MoSCoW (Alta → Must, Média → Should, Baixa → Could; RF06 é Must). Os RNF partem dos RNF01–13 da ERS, mais RNF14–17 vindos do plano.\n- Pendentes: critério do RF09 (B5) e tempo de resposta da IA (B10).\n- O piloto com turma fica para depois da entrega. Nas 6 semanas, o plano entrega a demo e o protocolo do piloto.\n- Ainda não existe código nem repositório git nesta pasta. Por enquanto ela só contém documentos.",
+      "secao": "Assistente de Escrita Processual — Grupo 8 > Pontos de atenção",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 86,
+        "fim": 106
+      }
+    }
+  ]
+}
