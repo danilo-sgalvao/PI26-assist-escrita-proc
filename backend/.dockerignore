@@ -1,0 +1,9 @@
+# Permitir apenas o necessário à compilação; não enviar configurações ou credenciais.
+*
+!.mvn/
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.properties
+!mvnw
+!pom.xml
+!src/
+!src/**

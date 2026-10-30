@@ -1,0 +1,36 @@
+# Complementa compose.yaml da branch da fundação do backend.
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /api/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; read -r status <&3; [[ \"$$status\" == *\" 200 \"* ]]'"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-18080}:8080"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/assistente
+      DATABASE_USER: assistente
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-assistente_local}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      ASSISTENTE_BEDROCK_HABILITADO: ${ASSISTENTE_BEDROCK_HABILITADO:-false}
+      ASSISTENTE_BEDROCK_REGIAO: ${ASSISTENTE_BEDROCK_REGIAO:-}
+      ASSISTENTE_BEDROCK_MODELO: ${ASSISTENTE_BEDROCK_MODELO:-}
+      ASSISTENTE_BEDROCK_TIMEOUT_SEGUNDOS: ${ASSISTENTE_BEDROCK_TIMEOUT_SEGUNDOS:-30}
+      ASSISTENTE_BEDROCK_MAX_TOKENS: ${ASSISTENTE_BEDROCK_MAX_TOKENS:-256}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+    # Encaminha credenciais temporárias apenas quando explicitamente configuradas no host.
+    # Em produção, prefira papéis do ambiente AWS em vez de chaves estáticas.
+    # Perfis locais exigem configuração apropriada de credenciais dentro do contêiner.
