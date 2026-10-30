@@ -1,0 +1,122 @@
+{
+  "id": "decisoes-v1-2",
+  "caminho": "docs/plano/v1.2/decisoes-plano-v1.2.md",
+  "titulo": "Decisões B1–B12 e mudanças do plano v1.2",
+  "versao": "0.2",
+  "estado": "vigente",
+  "papel": "decisoes",
+  "precedencia": 1,
+  "sha256": "d4b3bff789f93e239261a6c0fd7ac0bfcdf20085bafd2e39d9772cb7ece1497e",
+  "unidades": 12,
+  "caracteres": 13822,
+  "conteudo": [
+    {
+      "texto": "# Decisões para o Plano Mestre v1.2\n\n| Campo | Valor |\n|---|---|\n| Versão | 0.2 |\n| Data | 29/10/2026 |\n| Autor | Danilo Galvão (decisões); redação com apoio de IA (Claude) |\n| Revisor | — |\n| Estado | Aplicado no plano v1.2 (`plano-mestre-v1.2.md` e `.docx`); B5 e B10 pendentes |\n\nGuia para montar o plano v1.2 a partir do plano v1.1 editável. A ERS v2 é a base de requisitos. Este arquivo registra apenas o que muda no **plano**; a ERS não é alterada. As seções A a D são as decisões; a seção E registra as mudanças efetivamente aplicadas.\n",
+      "secao": "Decisões para o Plano Mestre v1.2",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 1,
+        "fim": 12
+      }
+    },
+    {
+      "texto": "## A. Mudanças diretas (ERS v2 → plano)\n\n| Seção do plano | Mudança |\n|---|---|\n| 1. Diagnóstico | Incluir a ERS v2, a POC 2.2 e os slides como documentos de entrada. Acrescentar às lacunas L1–L13 uma coluna \"como a ERS v2 resolve\". Ficam abertas a granularidade do diff e o L7, que foi resolvido pela decisão B7. |\n| 2. Apresentação | Escopo e exclusões passam a seguir a ERS v2. Novos interessados: responsáveis legais e stakeholder da POC. Novos objetivos: etapas e transparência para o aluno. |\n| 3. Fundamentação | Novas referências: documento MEC *IA básica* e POC 2.2. |\n| 5. Requisitos | A ERS v2 vira a linha de base. A T03 passa a ser \"revisar a ERS v2 e derivar HU/CA\". Novas HU-17 (etapas) e HU-18 (colagens). Catálogo de regras ganha RN07–RN10. A máquina de estados passa a ter as etapas Planejar → Escrever → Revisar → Reescrever → Submetida. Q-03 a Q-09 e Q-12 ficam marcadas como respondidas; as questões em aberto da ERS são incorporadas. |\n| 6. Arquitetura | Modelo de dados ganha turma, etapa na versão, evento de colagem, aceite do termo e devolutiva; a atividade ganha gênero, critérios e política de prazo. A API ganha endpoints de turmas, transição de etapa, colagens, devolutiva, termo e \"meus registros\". Não há módulo novo. |\n| 9. Qualidade | Testes de aceitação para RF16–RF22, verificação WCAG AA e teste de perda máxima no salvamento automático. |\n| 11. Rastreabilidade | A matriz ganha RF16–RF22 e RN07–RN10. A ERS v2 passa a ser o D02. |\n| 12. Riscos | Três riscos novos: escopo além da capacidade, colagem lida como prova de fraude (mitigado pela RN06) e consentimento não obtido. Os riscos da decisão B1 entram nesta seção. |\n| 13. Critérios | Os marcos M1–M6 passam a incluir os requisitos novos. |\n| Glossário | Novos termos: etapa, versão automática/marcada, evento de colagem, turma, devolutiva, termo de ciência, descarregamento cognitivo e autonomia progressiva. |\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > A. Mudanças diretas (ERS v2 → plano)",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 13,
+        "fim": 27
+      }
+    },
+    {
+      "texto": "## B. Decisões\n\n| # | Tema | Decisão | Estado |\n|---|---|---|---|\n| B1 | LLM | **API externa**, como na ERS v2. Substitui o \"LLM local\" da Tabela 2 do plano v1.1. | Decidido |\n| B2 | Fontes da similaridade | **Produções internas** da atividade e respostas do assistente. A base externa, citada pelos stakeholders, vira evolução futura (*Won't* nesta entrega). | Decidido |\n| B3 | Salvamento de versões | **ERS:** salvamento automático (1 min) e versão marcada por etapa | Decidido |\n| B4 | Após o prazo | **ERS:** configurável pelo professor; o padrão é \"aceita e marca atrasada\" | Decidido |\n| B5 | Critério do RF09 | — | **Pendente** |\n| B6 | Categorias de apoio (RF12) | **ERS:** categorias dos slides + \"pedido de escrita\" | Decidido |\n| B7 | Quando a similaridade roda | **ERS:** automática após a submissão | Decidido |\n| B8 | Priorização | **MoSCoW.** Conversão: Alta → Must, Média → Should, Baixa → Could. O RF06 passa a Must. | Decidido |\n| B9 | RNF | Base RNF01–13 da ERS. Entram RNF14 (tempo da API), RNF15 (substituibilidade do provedor de IA), RNF16 (cobertura/modularidade) e RNF17 (aviso de alteração não salva). | Decidido |\n| B10 | Tempo de resposta da IA | — | **Pendente** |\n| B11 | Piloto | O plano vai até a demo + protocolo de piloto pronto. O piloto acontece após a entrega, condicionado a aprovação e consentimento. | Decidido |\n| B12 | Cronograma | **Fixo** (6 semanas, mesma capacidade). Os requisitos novos se encaixam por priorização e realocação (ver seção C). | Decidido |\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > B. Decisões",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 28,
+        "fim": 44
+      }
+    },
+    {
+      "texto": "### Consequências da B1 (API externa) para o plano\n\n- **Tabela 2 / fatos confirmados:** o fato \"LLM local\" passa a ser \"LLM via API externa\".\n- **Arquitetura:** a porta do provedor de IA se mantém. Só troca o adaptador: sai o Ollama e entra o cliente da API via Spring AI. O Ollama sai do Docker Compose.\n- **Spike T07 e ADR-006:** deixam de escolher um modelo local e passam a escolher provedor e modelo, avaliando custo, termos de uso de dados, latência e qualidade no conjunto do RF09.\n- **Privacidade (RNF da ERS):**\n  - enviar à API só o texto e o pedido, nunca o nome ou outros identificadores;\n  - escolher um provedor que não treine com os dados;\n  - o termo de ciência (RF21) informa que o texto é processado por um serviço externo.\n- **Segredos:** a chave da API fica fora do repositório, em variável de ambiente ou segredo do GitHub Actions.\n- **Testes:** a CI usa um adaptador falso. O conjunto de avaliação do RF09 roda contra a API real, sob demanda, com custo controlado.\n- **Riscos novos:** custo/cota, indisponibilidade do provedor, mudança nos termos de uso e dados de menores em serviço de terceiros.\n- **Cronograma:** horas de infraestrutura do LLM local que deixam de existir (ex.: Ollama, hardware) voltam para o orçamento. Quantificar com o plano editável.\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > B. Decisões > Consequências da B1 (API externa) para o plano",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 45,
+        "fim": 58
+      }
+    },
+    {
+      "texto": "## C. Encaixe dos requisitos novos no cronograma fixo\n\n| Requisito | Estimativa | MoSCoW |\n|---|---|---|\n| RF16 (turma, além da T16) | ~2 h | Must |\n| RF17 (etapas) | ~8 h | Must |\n| RF21 (termo de ciência) | ~3 h | Must |\n| RF22 (autenticação) | já coberta | Must |\n| RF18 (colagens) | ~5 h | Should |\n| RF20 (meus registros) | ~3 h | Should |\n| RF19 (devolutiva) | ~3 h | Could |\n| **Total** | **~24 h** | |\n\nFontes de horas, em ordem:\n1. Horas liberadas pela B1.\n2. Reserva do plano v1.1.\n3. Simplificação das válvulas *Should* já previstas (RF11, RF12, RF15).\n\nSe ainda faltar, corta-se primeiro o RF19, depois o RF20.\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > C. Encaixe dos requisitos novos no cronograma fixo",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 59,
+        "fim": 78
+      }
+    },
+    {
+      "texto": "## D. Pendências\n\n- **B5:** critério do RF09.\n- **B10:** tempo de resposta da IA. Com API, os 10 s da ERS são mais viáveis do que eram com LLM local.\n- **Provedor e modelo da API:** escolha do spike T07 (ADR-006).\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > D. Pendências",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 79,
+        "fim": 84
+      }
+    },
+    {
+      "texto": "## E. Mudanças aplicadas no plano v1.2\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 85,
+        "fim": 86
+      }
+    },
+    {
+      "texto": "### E.1 Como as pendências ficaram no plano\n\n- **B5:** os CA do RF09 da ERS v2 valem integralmente (≥ 30 pedidos de teste; exemplos sobre outro tema; verificação automática). Os limites de 150 palavras por orientação e de um exemplo de até 25 palavras aparecem como **CA-09.5 (pendente)**. Q-05 continua aberta.\n- **B10:** vale o valor da ERS (RNF06: 10 s em 90%, sugerido) até a decisão. O spike T07 mede a latência real. Ver Q-21.\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2 > E.1 Como as pendências ficaram no plano",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 87,
+        "fim": 91
+      }
+    },
+    {
+      "texto": "### E.2 Correções na estimativa do cronograma\n\nA estimativa da seção C (~24 h) era grosseira. Refeita tarefa por tarefa, deu outro resultado:\n\n| Item | Horas |\n|---|---|\n| Trabalho novo: tarefas novas T60, T61, T63, T65 | +8 h |\n| Trabalho novo: +0,5 h em 16 tarefas existentes | +8 h |\n| Simplificações e remoções | −9 h |\n| **Saldo** | **+7 h** (de 144 h para 151 h) |\n\n- **Fora da conta:** o RF19 (3 h) foi para a tarefa T64, que não entra na base, e os aceites/HU foram absorvidos pelas tarefas da área A.\n- **B1 liberou só 1,5 h** (T07 −1 h, T49 −0,5 h), menos do que eu tinha sugerido.\n- **Reserva:** caiu de 12 h para 5 h. Por área: A 1,5 h, **B 0,5 h**, C 1,5 h, D 1,5 h.\n- **Carga semanal:** nenhuma área passa de 6,5 h de tarefas em nenhuma semana.\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2 > E.2 Correções na estimativa do cronograma",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 92,
+        "fim": 107
+      }
+    },
+    {
+      "texto": "### E.3 Trocas que reduzem margem ou mudam a ordem (a equipe deve conferir)\n\n| Mudança | Efeito |\n|---|---|\n| **T38 removida** (n-gramas persistidos) | Os n-gramas passam a ser calculados na hora, dentro de T45. Para uma turma de demonstração o volume é pequeno. |\n| **T44 removida** (testes de componentes críticos, 1,5 h) | Os testes de componente passam a ser feitos dentro de cada tarefa, como a DoD já exige. Perde-se a passada final dedicada. |\n| **T47 reduzida** (−1 h) | O resultado da similaridade fica em JSONB. |\n| **T28 reduzida** (−0,5 h) | As entidades já são modeladas em T09. |\n| **T30 reduzida** (−0,5 h) | A ERS v2 (seção 8) já operacionaliza os indicadores. |\n| **T34 reduzida** (−1 h) | Os indicadores do estudante saíram da tela de submissão e foram para T65 (meus registros), junto com o RF20. |\n| **T42 reduzida** (−0,5 h) | O relatório de similaridade na interface fica mais simples. |\n| **Etapas (RF17) em duas sprints** | O domínio vem na Semana 3 (T61, área D) e a interface por etapas na Semana 4 (T60, área B). **A demonstração das etapas só acontece em M4.** Não coube antes sem tirar algo do frontend nas Semanas 2 e 3. |\n| **Tela de turma simples** | Fica dentro de T14. A gestão completa de turma não tem tarefa própria. |\n| **T29 movida** (backup e dados de demonstração) | Sai da Semana 3 para a Semana 5, para abrir espaço para T61. |\n| **Ordem da Semana 5 da área A** | Passa a ser T41 → T39 → T40, porque T39 depende de T65. |\n| **RF20 em duas áreas** | A consulta fica com D (dentro de T37) e a tela com B (T65). |\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2 > E.3 Trocas que reduzem margem ou mudam a ordem (a equipe deve conferir)",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 108,
+        "fim": 124
+      }
+    },
+    {
+      "texto": "### E.4 Outras mudanças no plano por seção\n\n**Capa e convenções**\n- Versão 1.2.\n- Novos documentos de entrada: ERS v2.0, POC 2.2 e slides.\n- Novo rótulo \"Decisão da equipe (Bnn)\".\n\n**1. Diagnóstico**\n- Parágrafo sobre as novas fontes.\n- Tabela de fatos confirmados refeita: RF01–RF22, RN01–RN10, RNF01–RNF13, hipótese, risco, plano da POC e LLM por API.\n- Lacunas L1–L14 ganham a coluna \"Situação com a ERS v2\".\n- RT-04 reescrita para API com RNF04; nova RT-06 (consentimento e termo).\n- Nova seção 1.7 com a tabela B1–B12.\n\n**2. Planejamento**\n- Contexto com a hipótese e o limite declarado (B11).\n- Objetivos reescritos (6).\n- Escopo e exclusões revistos.\n- Premissas:\n  - PR-01 confirmada;\n  - PR-03 passa a tratar do provedor de API;\n  - PR-05 segue B11;\n  - nova DP-04 (conta e crédito na API).\n- Novos stakeholders: stakeholder da POC, responsáveis legais e provedor de LLM.\n\n**3. Fundamentação**\n- Fichas 29148, 42010, 25010, arquitetura e segurança ajustadas.\n- Novas referências: [49] POC, [50] MEC, [51] slides, [52] WCAG 2.1.\n- [28] passa a ser Spring AI Chat Model; [29] Ollama fica como contingência.\n\n**4. Metodologia**\n- MoSCoW nova:\n  - *Must*: RF01–RF10, RF13, RF14, RF16, RF17, RF21, RF22;\n  - *Should*: RF11, RF12, RF15, RF18, RF20;\n  - *Could*: RF19;\n  - *Won't*: base externa e piloto dentro das 6 semanas.\n  - **RF16 é exceção**: Média na ERS, mas *Must* aqui, porque sustenta a visibilidade por turma.\n- Sprint goals e visão por semana refeitos.\n- DoD cita a chave da API.\n\n**5. Requisitos**\n- T03 passa a ser \"revisar a ERS v2\".\n- HU/CA:\n  - HU-01, HU-04, HU-09, HU-14 e HU-15 reescritas;\n  - novas HU-17 (etapas) e HU-18 (colagens).\n- Tabela de RNF:\n  - RNF01–RNF13 da ERS, mais RNF14–RNF17 do plano;\n  - correspondência com os antigos RNF-01..10.\n- RN07–RN10 com mecanismos.\n- Máquina de estados com as etapas.\n- Perguntas:\n  - Q-01 a Q-16 com coluna de situação (várias respondidas pela ERS);\n  - novas Q-17 a Q-20 (vindas da ERS) e Q-21 (B10).\n- Roteiro R2 vira \"revisão da ERS v2\".\n\n**6. Arquitetura**\n- Drivers e preocupações com RNF04 e RNF07/RNF08.\n- C4 nos níveis 1 a 3 sem Ollama, com o provedor por API.\n- Módulos ganham turmas, etapas, colagens, termo, devolutiva e meus registros.\n- Modelo de dados com turma, etapa, transição, colagem, termo e devolutiva, em duas figuras.\n- Sequência do apoio com:\n  - classificação da solicitação e recusa (FA01);\n  - indisponibilidade do provedor (FA04);\n  - validação reprovada (FA02).\n- Defesa em camadas:\n  - camada 1 vira classificação automática;\n  - camada 3 inclui minimização dos dados.\n- Similaridade automática por evento de submissão, com resumo de colagens.\n- Seção 6.7.5 reescrita para provedor por API.\n- Compose sem Ollama; linha de acessibilidade (axe).\n- ADR-006 redefinido; novo ADR-009 (versões automáticas e marcadas).\n- Contrato da API com termo, turmas, etapa, colagens, meus registros e devolutiva. O POST de similaridade foi removido.\n\n**8. Cronograma**\n- Tabelas de capacidade, horas por área e sensibilidade refeitas.\n- Ordem de corte: RF19 → RF20 → RF11/RF12 → RF15 → destaque do RF18.\n- Gantt em Mermaid, com datas fictícias explicadas no texto.\n- Nova tabela de mudanças tarefa a tarefa (8.5).\n\n**9. Qualidade**\n- Avaliação do assistente com:\n  - ≥ 30 pedidos de escrita/reescrita;\n  - ≥ 12 casos legítimos pelas categorias da ERS;\n  - ≥ 4 casos de RN07/RN08;\n  - custo registrado.\n- Metas de 0 identificadores no *payload* e cobertura das transições de etapa.\n- Nova linha de acessibilidade.\n- Tabela de requisitos × testes com RF16–RF22.\n\n**10. Versionamento**\n- Pastas de `docs/` alinhadas à organização atual (`referencias/`, `plano/`, `ers/`, …), sem os números.\n- *Workflow* manual de avaliação contra a API real; CI usa adaptador falso.\n- Chave da API com limite de gasto.\n\n**11. Documentos**\n- ERS v2.x como D02.\n- Novos D17 (este arquivo) e D18 (protocolo do piloto).\n- Matriz de rastreabilidade com RF16–RF22 e a nova MoSCoW (RF06 vira *Must*).\n\n**12. Riscos**\n- R01 vira custo/cota/indisponibilidade da API.\n- Novos: R14 (dados no provedor), R15 (capacidade, área B), R16 (colagem lida como fraude), R17 (consentimento).\n- R13 inclui falta de internet na demonstração.\n\n**13. Critérios**\n- Marcos M1–M6 atualizados.\n- RN01–RN10.\n- Três contêineres.\n- D17 e D18 no pacote de entrega.\n\n**Apêndices**\n- Novo registro de uso de IA para a v1.2.\n- Glossário com turma, etapa, versão automática/marcada, colagem, provedor de LLM, termo, devolutiva, descarregamento cognitivo, autonomia progressiva e piloto.\n\n**Diagramas**\n- As 10 figuras da v1.1 foram refeitas em Mermaid. O modelo de dados virou duas figuras, então agora são 11.\n- O `.docx` usa as imagens renderizadas; o `.md` mantém o código Mermaid como fonte.\n",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2 > E.4 Outras mudanças no plano por seção",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 125,
+        "fim": 242
+      }
+    },
+    {
+      "texto": "### E.5 Divergência que continua aberta na ERS\n\nO RF15 da ERS v2 ainda cita \"base externa de referência\", adiada pela decisão B2. O plano registra a divergência (seção 5.9, R2), mas **a ERS não foi alterada**. Mudá-la depende de decisão do grupo.",
+      "secao": "Decisões para o Plano Mestre v1.2 > E. Mudanças aplicadas no plano v1.2 > E.5 Divergência que continua aberta na ERS",
+      "localizacao": {
+        "tipo": "linhas",
+        "inicio": 243,
+        "fim": 245
+      }
+    }
+  ]
+}
