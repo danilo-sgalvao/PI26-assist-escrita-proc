@@ -1,0 +1,453 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Fundação da arquitetura assíncrona do Assistente de Escrita Processual
+
+Parameters:
+  DatabaseHost:
+    Type: String
+    Description: Endpoint do PostgreSQL com autenticação IAM habilitada
+  DatabaseName:
+    Type: String
+  DatabaseUser:
+    Type: String
+    Description: Usuário PostgreSQL com privilégio rds_iam
+  DatabaseUserArn:
+    Type: String
+    Description: ARN rds-db:connect do usuário no cluster ou instância
+  PrivateSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  LambdaSecurityGroups:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  BedrockModelArn:
+    Type: String
+    Description: ARN de modelo Bedrock autorizado para Converse
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        DB_HOST: !Ref DatabaseHost
+        DB_NAME: !Ref DatabaseName
+        DB_USER: !Ref DatabaseUser
+        DB_CA_PATH: /var/task/rds-global-bundle.pem
+
+Resources:
+  Identidade:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+
+  ClienteIdentidade:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref Identidade
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+
+  ApiRest:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      Auth:
+        DefaultAuthorizer: Cognito
+        Authorizers:
+          Cognito:
+            UserPoolArn: !GetAtt Identidade.Arn
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          title: Assistente de Escrita
+          version: '1.0'
+        paths:
+          /saude:
+            get:
+              security: []
+              responses:
+                '200':
+                  description: Infraestrutura disponível
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    statusCode: '200'
+
+  ApiWebSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-websocket'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+
+  EstagioWebSocket:
+    DependsOn: [RotaConexao, RotaDesconexao]
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      StageName: v1
+      AutoDeploy: true
+
+  BucketFrontend:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  OrigemCloudFront:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-frontend'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  DistribuicaoFrontend:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: frontend
+            DomainName: !GetAtt BucketFrontend.RegionalDomainName
+            OriginAccessControlId: !GetAtt OrigemCloudFront.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: frontend
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+  PoliticaFrontend:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BucketFrontend
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${BucketFrontend.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${DistribuicaoFrontend}'
+
+  TopicoEventos:
+    Type: AWS::SNS::Topic
+
+  PoliticaTopico:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref TopicoEventos]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref TopicoEventos
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-${AWS::AccountId}-${AWS::Region}-redacoes'
+
+  BucketRedacoes:
+    Type: AWS::S3::Bucket
+    DependsOn: PoliticaTopico
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-${AWS::AccountId}-${AWS::Region}-redacoes'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Event: s3:ObjectCreated:*
+            Topic: !Ref TopicoEventos
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: redacoes/
+
+  FilaFalhas:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  FilaRevisoes:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 180
+      MessageRetentionPeriod: 345600
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FilaFalhas.Arn
+        maxReceiveCount: 5
+
+  PoliticaFila:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref FilaRevisoes]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt FilaRevisoes.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref TopicoEventos
+
+  AssinaturaFila:
+    Type: AWS::SNS::Subscription
+    DependsOn: PoliticaFila
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt FilaRevisoes.Arn
+      TopicArn: !Ref TopicoEventos
+      RawMessageDelivery: true
+
+  Sugestoes:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id_producao
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id_producao
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  Ingestao:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/
+      Handler: ingestao.app.lambda_handler
+      VpcConfig:
+        SubnetIds: !Ref PrivateSubnets
+        SecurityGroupIds: !Ref LambdaSecurityGroups
+      Environment:
+        Variables:
+          BUCKET_REDACOES: !Ref BucketRedacoes
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: rds-db:connect
+              Resource: !Ref DatabaseUserArn
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub '${BucketRedacoes.Arn}/redacoes/*'
+      Events:
+        Submissao:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiRest
+            Path: /producoes
+            Method: post
+
+  Consulta:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/
+      Handler: consulta.app.lambda_handler
+      VpcConfig:
+        SubnetIds: !Ref PrivateSubnets
+        SecurityGroupIds: !Ref LambdaSecurityGroups
+      Environment:
+        Variables:
+          TABELA_SUGESTOES: !Ref Sugestoes
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: rds-db:connect
+              Resource: !Ref DatabaseUserArn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt Sugestoes.Arn
+      Events:
+        Consulta:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiRest
+            Path: /producoes/{id}
+            Method: get
+
+  Conexao:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/
+      Handler: conexao_websocket.app.lambda_handler
+      VpcConfig:
+        SubnetIds: !Ref PrivateSubnets
+        SecurityGroupIds: !Ref LambdaSecurityGroups
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: rds-db:connect
+              Resource: !Ref DatabaseUserArn
+
+  Autorizador:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/
+      Handler: autorizador.app.lambda_handler
+      Environment:
+        Variables:
+          COGNITO_ISSUER: !Sub 'https://cognito-idp.${AWS::Region}.${AWS::URLSuffix}/${Identidade}'
+          COGNITO_CLIENT_ID: !Ref ClienteIdentidade
+
+  Processador:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/
+      Handler: processador_bedrock.app.lambda_handler
+      Timeout: 30
+      VpcConfig:
+        SubnetIds: !Ref PrivateSubnets
+        SecurityGroupIds: !Ref LambdaSecurityGroups
+      Environment:
+        Variables:
+          BUCKET_REDACOES: !Ref BucketRedacoes
+          TABELA_SUGESTOES: !Ref Sugestoes
+          BEDROCK_MODEL_ID: !Ref BedrockModelArn
+          WEBSOCKET_ENDPOINT: !Sub 'https://${ApiWebSocket}.execute-api.${AWS::Region}.${AWS::URLSuffix}/v1'
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: rds-db:connect
+              Resource: !Ref DatabaseUserArn
+            - Effect: Allow
+              Action: s3:GetObjectVersion
+              Resource: !Sub '${BucketRedacoes.Arn}/redacoes/*'
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:PutItem]
+              Resource: !GetAtt Sugestoes.Arn
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: !Ref BedrockModelArn
+            - Effect: Allow
+              Action: execute-api:ManageConnections
+              Resource: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiWebSocket}/v1/POST/@connections/*'
+      Events:
+        Fila:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt FilaRevisoes.Arn
+            BatchSize: 1
+            FunctionResponseTypes: [ReportBatchItemFailures]
+
+  IntegracaoConexao:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Conexao.Arn}/invocations'
+
+  AutorizadorWebSocket:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      Name: cognito-token
+      AuthorizerType: REQUEST
+      IdentitySource: ['route.request.querystring.token']
+      AuthorizerUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Autorizador.Arn}/invocations'
+
+  PermissaoAutorizador:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Autorizador
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiWebSocket}/authorizers/*'
+
+  PermissaoConexao:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Conexao
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiWebSocket}/*'
+
+  RotaConexao:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      RouteKey: $connect
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref AutorizadorWebSocket
+      Target: !Join ['/', ['integrations', !Ref IntegracaoConexao]]
+
+  RotaDesconexao:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      Target: !Join ['/', ['integrations', !Ref IntegracaoConexao]]
+
+Outputs:
+  UrlFrontend:
+    Value: !Sub 'https://${DistribuicaoFrontend.DomainName}'
+  BucketFrontend:
+    Value: !Ref BucketFrontend
+  BucketRedacoes:
+    Value: !Ref BucketRedacoes
+  FilaRevisoes:
+    Value: !Ref FilaRevisoes
+  FilaFalhas:
+    Value: !Ref FilaFalhas
+  TabelaSugestoes:
+    Value: !Ref Sugestoes
+  CognitoUserPoolId:
+    Value: !Ref Identidade
+  CognitoClientId:
+    Value: !Ref ClienteIdentidade
+  UrlRest:
+    Value: !Sub 'https://${ApiRest}.execute-api.${AWS::Region}.${AWS::URLSuffix}/v1'
+  UrlWebSocket:
+    Value: !Sub 'wss://${ApiWebSocket}.execute-api.${AWS::Region}.${AWS::URLSuffix}/v1'
