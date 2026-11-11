@@ -1,0 +1,249 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Fundação da arquitetura assíncrona do Assistente de Escrita Processual
+
+Resources:
+  Identidade:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+
+  ClienteIdentidade:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref Identidade
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+
+  ApiRest:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      Auth:
+        DefaultAuthorizer: Cognito
+        Authorizers:
+          Cognito:
+            UserPoolArn: !GetAtt Identidade.Arn
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          title: Assistente de Escrita
+          version: '1.0'
+        paths:
+          /saude:
+            get:
+              security: []
+              responses:
+                '200':
+                  description: Infraestrutura disponível
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    statusCode: '200'
+
+  ApiWebSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-websocket'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+
+  EstagioWebSocket:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiWebSocket
+      StageName: v1
+      AutoDeploy: true
+
+  BucketFrontend:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  OrigemCloudFront:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-frontend'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  DistribuicaoFrontend:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: frontend
+            DomainName: !GetAtt BucketFrontend.RegionalDomainName
+            OriginAccessControlId: !GetAtt OrigemCloudFront.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: frontend
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+  PoliticaFrontend:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BucketFrontend
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${BucketFrontend.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${DistribuicaoFrontend}'
+
+  TopicoEventos:
+    Type: AWS::SNS::Topic
+
+  PoliticaTopico:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref TopicoEventos]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref TopicoEventos
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-${AWS::AccountId}-${AWS::Region}-redacoes'
+
+  BucketRedacoes:
+    Type: AWS::S3::Bucket
+    DependsOn: PoliticaTopico
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-${AWS::AccountId}-${AWS::Region}-redacoes'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Event: s3:ObjectCreated:*
+            Topic: !Ref TopicoEventos
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: redacoes/
+
+  FilaFalhas:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  FilaRevisoes:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 180
+      MessageRetentionPeriod: 345600
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FilaFalhas.Arn
+        maxReceiveCount: 5
+
+  PoliticaFila:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref FilaRevisoes]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt FilaRevisoes.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref TopicoEventos
+
+  AssinaturaFila:
+    Type: AWS::SNS::Subscription
+    DependsOn: PoliticaFila
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt FilaRevisoes.Arn
+      TopicArn: !Ref TopicoEventos
+      RawMessageDelivery: true
+
+  Sugestoes:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id_producao
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id_producao
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+Outputs:
+  UrlFrontend:
+    Value: !Sub 'https://${DistribuicaoFrontend.DomainName}'
+  BucketFrontend:
+    Value: !Ref BucketFrontend
+  BucketRedacoes:
+    Value: !Ref BucketRedacoes
+  FilaRevisoes:
+    Value: !Ref FilaRevisoes
+  FilaFalhas:
+    Value: !Ref FilaFalhas
+  TabelaSugestoes:
+    Value: !Ref Sugestoes
+  CognitoUserPoolId:
+    Value: !Ref Identidade
+  CognitoClientId:
+    Value: !Ref ClienteIdentidade
+  UrlRest:
+    Value: !Sub 'https://${ApiRest}.execute-api.${AWS::Region}.${AWS::URLSuffix}/v1'
+  UrlWebSocket:
+    Value: !Sub 'wss://${ApiWebSocket}.execute-api.${AWS::Region}.${AWS::URLSuffix}/v1'
