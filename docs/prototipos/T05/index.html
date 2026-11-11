@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T05 — Protótipo de baixa fidelidade</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #222; background: #eee; }
+    body { max-width: 70rem; margin: auto; padding: 1rem; }
+    a { color: #222; }
+    a:focus-visible, button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #222; }
+    nav, section, aside, article { border: 2px solid #666; padding: 1rem; margin: 1rem 0; background: #fff; }
+    nav a, .acoes a { display: inline-block; border: 1px solid #666; padding: .35rem .7rem; margin: .2rem; }
+    section { min-height: 22rem; }
+    .colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+    .colunas > * { margin: 0; }
+    textarea { width: 100%; min-height: 9rem; box-sizing: border-box; font: inherit; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #777; padding: .5rem; text-align: left; }
+    .anotacao { border-left: 4px solid #666; padding-left: .75rem; }
+    .rf { font-size: .9rem; color: #444; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Assistente de Escrita Processual — protótipo T05</h1>
+    <p>Fluxos para discussão. Dados ilustrativos; os controles não salvam informações.</p>
+  </header>
+  <nav aria-label="Telas do protótipo">
+    <a href="#termo">Termo</a><a href="#atividades">Atividades</a><a href="#editor">Editor</a><a href="#historico">Histórico e comparação</a><a href="#apoio">Apoio</a><a href="#professor">Professor</a><a href="#registros">Meus registros</a>
+  </nav>
+
+  <section id="termo" aria-labelledby="titulo-termo">
+    <p class="rf">RF21 · RF22 · RN10</p>
+    <h2 id="titulo-termo">1. Termo de ciência</h2>
+    <p>Registramos versões do texto, interações com o assistente, colagens e tempo em cada etapa. Você pode consultar seus dados. O professor os vê para orientar o processo de aprendizagem.</p>
+    <p>Solicitações ao assistente podem ser processadas por um serviço externo de IA, sem seu nome ou outros identificadores. Indicadores não viram nota nem ranking.</p>
+    <p>Para usar a plataforma, é necessário aceitar o termo. Para menores de idade, também é necessário o consentimento do responsável.</p>
+    <label><input type="checkbox"> Li o termo e estou ciente do registro de dados.</label>
+    <p class="anotacao">No produto, a entrada só será liberada após o aceite registrado e a verificação do consentimento quando necessário.</p>
+    <p class="acoes"><a href="#atividades">Ver próxima tela: atividades →</a></p>
+  </section>
+
+  <section id="atividades" aria-labelledby="titulo-atividades">
+    <p class="rf">RF01 · RF02 · RF16 · RF22</p>
+    <h2 id="titulo-atividades">2. Minhas atividades</h2>
+    <article>
+      <h3>Atividade de exemplo</h3>
+      <p>Gênero: texto argumentativo · Tema e orientações: definidos pelo professor · Prazo: conforme atividade</p>
+      <p>Situação: ainda não iniciada</p>
+      <a href="#editor">Iniciar produção →</a>
+    </article>
+    <p class="anotacao">A primeira etapa de uma nova produção é Planejar.</p>
+  </section>
+
+  <section id="editor" aria-labelledby="titulo-editor">
+    <p class="rf">RF03 · RF04 · RF17 · RF18 · RF14</p>
+    <h2 id="titulo-editor">3. Editor — etapa Planejar</h2>
+    <p>Etapas: <strong>Planejar</strong> → Escrever → Revisar → Reescrever</p>
+    <div class="colunas">
+      <article>
+        <h3>Minhas ideias</h3>
+        <label for="plano">Tese, ideias e estrutura pretendida</label>
+        <textarea id="plano" placeholder="Espaço para o estudante planejar a própria produção"></textarea>
+        <p>Salvamento automático: aguardando alterações</p>
+        <p class="acoes"><a href="#historico">Ver versões</a><a href="#apoio">Pedir apoio</a></p>
+      </article>
+      <aside>
+        <h3>Próximas ações</h3>
+        <p><a href="#editor">Avançar para Escrever</a> · <a href="#editor">Voltar à etapa anterior</a></p>
+        <p>Avançar ou voltar registra a transição. Avançar cria uma versão marcada; o ciclo Revisar → Reescrever pode se repetir.</p>
+        <p>Colagens são permitidas e registradas, conforme o termo.</p>
+        <p>Submeter versão final: disponível após a escrita, sujeito à política de prazo. Após a submissão, a edição fica bloqueada.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="historico" aria-labelledby="titulo-historico">
+    <p class="rf">RF04 · RF05 · RF06 · RF18</p>
+    <h2 id="titulo-historico">4. Histórico e comparação</h2>
+    <label for="filtro-etapa">Etapa</label> <select id="filtro-etapa"><option>Todas</option><option>Planejar</option><option>Escrever</option><option>Revisar</option><option>Reescrever</option></select>
+    <label for="filtro-tipo">Tipo</label> <select id="filtro-tipo"><option>Todos</option><option>Automática</option><option>Marcada</option></select>
+    <p>Versões disponíveis: V1 · Planejar · marcada; V2 · Escrever · automática; V3 · Escrever · marcada.</p>
+    <label for="versao-a">Versão A</label> <select id="versao-a"><option>V1</option><option>V2</option><option>V3</option></select>
+    <label for="versao-b">Versão B</label> <select id="versao-b"><option>V3</option><option>V2</option><option>V1</option></select>
+    <div class="colunas">
+      <article><h3>Versão A</h3><p>[texto escrito pelo estudante na versão selecionada]</p></article>
+      <article><h3>Versão B</h3><p>[texto escrito pelo estudante na versão selecionada]</p><p>Legenda: inserção · exclusão · alteração · trecho colado</p></article>
+    </div>
+    <p class="anotacao">No painel do professor, a sugestão inicial de comparação é primeira versão marcada × versão final.</p>
+  </section>
+
+  <section id="apoio" aria-labelledby="titulo-apoio">
+    <p class="rf">RF07 · RF08 · RF09 · RF10 · RF12 · RN01 · RN02</p>
+    <h2 id="titulo-apoio">5. Painel de apoio</h2>
+    <p>Etapa atual: Revisar · Trecho selecionado: [trecho escolhido pelo estudante]</p>
+    <label for="pergunta">Sua dúvida sobre a escrita</label>
+    <textarea id="pergunta" placeholder="Descreva o que você quer compreender ou melhorar"></textarea>
+    <p>Orientação gerada por IA: “Sua conclusão retoma a tese apresentada no início?”</p>
+    <p class="anotacao">Pedidos para escrever ou reescrever recebem recusa explícita e orientação. Não há ação para inserir respostas da IA no editor.</p>
+    <p>Histórico de interações: pergunta · orientação ou recusa · etapa · data e hora.</p>
+    <p class="acoes"><a href="#editor">Voltar ao editor →</a></p>
+  </section>
+
+  <section id="professor" aria-labelledby="titulo-professor">
+    <p class="rf">RF05 · RF06 · RF10 · RF11 · RF12 · RF13 · RF15 · RF18 · RN05 · RN06</p>
+    <h2 id="titulo-professor">6. Painel do professor — atividade de exemplo</h2>
+    <table><thead><tr><th>Estudante</th><th>Etapa / situação</th><th>Processo</th></tr></thead><tbody><tr><td>Estudante A</td><td>Revisar · em andamento</td><td>3 versões · 2 interações · 1 colagem</td></tr><tr><td>Estudante B</td><td>Submetida</td><td>5 versões · 1 interação · 0 colagens</td></tr></tbody></table>
+    <p>Detalhe do estudante selecionado: tempo por etapa; versões e comparação; perguntas e orientações; apoio por categoria e etapa; eventos de colagem destacados; similaridade por fonte e trechos.</p>
+    <p class="anotacao">Os indicadores apoiam a orientação. A tela não ordena estudantes por indicador, não atribui rótulos de julgamento e não dá veredito de plágio.</p>
+    <p class="acoes"><a href="#historico">Abrir comparação de versões →</a></p>
+  </section>
+
+  <section id="registros" aria-labelledby="titulo-registros">
+    <p class="rf">RF04 · RF05 · RF10 · RF11 · RF12 · RF18 · RF20 · RN10</p>
+    <h2 id="titulo-registros">7. Meus registros — visão do estudante</h2>
+    <p>Atividade de exemplo · etapa atual: Revisar · tempo por etapa: Planejar 20 min, Escrever 35 min, Revisar 10 min.</p>
+    <ul><li>Versões: 3 <a href="#historico">consultar histórico</a></li><li>Interações com o assistente: 2 <a href="#apoio">consultar interações</a></li><li>Colagens: 1 evento; trecho, data e etapa disponíveis para consulta</li><li>Apoio solicitado: estrutura 1; argumentação 1; pedidos de escrita 0</li></ul>
+    <p class="anotacao">Esta visão mostra apenas os registros do próprio estudante, incluindo indicadores e eventos de colagem.</p>
+  </section>
+</body>
+</html>
