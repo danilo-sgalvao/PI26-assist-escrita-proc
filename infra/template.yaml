@@ -3,6 +3,11 @@ Transform: AWS::Serverless-2016-10-31
 Description: Fundação da arquitetura assíncrona do Assistente de Escrita Processual
 
 Parameters:
+  FrontendOrigin:
+    Type: String
+    Default: ''
+    Description: Origem HTTPS opcional; vazia usa CloudFront. Para desenvolvimento, http://localhost com porta.
+    AllowedPattern: '(^$|^https://[A-Za-z0-9.-]+(:[0-9]+)?$|^http://(localhost|127\.0\.0\.1):[0-9]+$)'
   DatabaseHost:
     Type: String
     Description: Endpoint do PostgreSQL com autenticação IAM habilitada
@@ -22,6 +27,9 @@ Parameters:
     Type: String
     Description: ARN de modelo Bedrock autorizado para Converse
 
+Conditions:
+  UsaOrigemPersonalizada: !Not [!Equals [!Ref FrontendOrigin, '']]
+
 Globals:
   Function:
     Runtime: python3.12
@@ -33,6 +41,7 @@ Globals:
         DB_NAME: !Ref DatabaseName
         DB_USER: !Ref DatabaseUser
         DB_CA_PATH: /var/task/rds-global-bundle.pem
+        FRONTEND_ORIGIN: !If [UsaOrigemPersonalizada, !Ref FrontendOrigin, !Sub 'https://${DistribuicaoFrontend.DomainName}']
 
 Resources:
   Identidade:
@@ -49,12 +58,33 @@ Resources:
       UserPoolId: !Ref Identidade
       GenerateSecret: false
       PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
 
   ApiRest:
     Type: AWS::Serverless::Api
     Properties:
       StageName: v1
+      Cors:
+        AllowOrigin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
       Auth:
+        AddDefaultAuthorizerToCorsPreflight: false
         DefaultAuthorizer: Cognito
         Authorizers:
           Cognito:
@@ -71,6 +101,9 @@ Resources:
               responses:
                 '200':
                   description: Infraestrutura disponível
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
               x-amazon-apigateway-integration:
                 type: mock
                 requestTemplates:
@@ -78,6 +111,8 @@ Resources:
                 responses:
                   default:
                     statusCode: '200'
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
 
   ApiWebSocket:
     Type: AWS::ApiGatewayV2::Api
@@ -118,6 +153,23 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
+  RotasFrontend:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub '${AWS::StackName}-rotas-frontend'
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Rotas da aplicação de página única
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          if (request.uri === '/termo-de-ciencia' || request.uri === '/termo-de-ciencia/') {
+            request.uri = '/index.html';
+          }
+          return request;
+        }
+
   DistribuicaoFrontend:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -132,6 +184,9 @@ Resources:
               OriginAccessIdentity: ''
         DefaultCacheBehavior:
           TargetOriginId: frontend
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt RotasFrontend.FunctionARN
           ViewerProtocolPolicy: redirect-to-https
           AllowedMethods: [GET, HEAD]
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6

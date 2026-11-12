@@ -1,6 +1,7 @@
 """Configuração e acesso PostgreSQL autenticado por IAM."""
 import json
 import os
+
 import boto3
 import psycopg
 
@@ -16,5 +17,11 @@ def banco():
 
 
 def resposta(status, data):
-    return {"statusCode": status, "headers": {"Content-Type": "application/json"},
+    headers = {"Content-Type": "application/json"}
+    origin = os.environ.get("FRONTEND_ORIGIN")
+    if origin:
+        headers.update({"Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                        "Access-Control-Allow-Methods": "GET,POST,OPTIONS"})
+    return {"statusCode": status, "headers": headers,
             "body": json.dumps(data, ensure_ascii=False)}
