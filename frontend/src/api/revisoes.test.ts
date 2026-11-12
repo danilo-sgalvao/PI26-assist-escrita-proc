@@ -1,0 +1,35 @@
+import { afterEach, expect, test, vi } from 'vitest'
+
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules() })
+
+test('autentica no Cognito e usa o ID token nas rotas de revisão', async () => {
+  vi.stubEnv('VITE_API_URL', 'https://api.exemplo/v1')
+  vi.stubEnv('VITE_COGNITO_REGION', 'us-east-1')
+  vi.stubEnv('VITE_COGNITO_CLIENT_ID', 'cliente')
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ AuthenticationResult: { IdToken: 'x.eyJzdWIiOiJhbHVubyJ9.x', AccessToken: 'access' } }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ id_producao: 'id', status: 'PROCESSANDO' }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ id_producao: 'id', status: 'CONCLUIDO', sugestoes: ['Revisar.'] }) })
+  vi.stubGlobal('fetch', fetchMock)
+  const api = await import('./revisoes')
+  const sessao = await api.entrar('aluno@exemplo.com', 'senha')
+  expect('idToken' in sessao).toBe(true)
+  if (!('idToken' in sessao)) throw new Error('Sessão esperada')
+  expect(fetchMock.mock.calls[0][0]).toBe('https://cognito-idp.us-east-1.amazonaws.com/')
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ ClientId: 'cliente', AuthFlow: 'USER_PASSWORD_AUTH' })
+  await api.enviar('Texto sintético', sessao.idToken)
+  expect(fetchMock.mock.calls[1][0]).toBe('https://api.exemplo/v1/producoes')
+  expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe(sessao.idToken)
+  expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ texto: 'Texto sintético', consentimento: true })
+  expect((await api.consultar('id', sessao.idToken)).sugestoes).toEqual(['Revisar.'])
+  expect(fetchMock.mock.calls[2][0]).toBe('https://api.exemplo/v1/producoes/id')
+})
+
+test('abre WebSocket seguro com o token de acesso', async () => {
+  vi.stubEnv('VITE_WEBSOCKET_URL', 'wss://socket.exemplo/v1')
+  const socket = vi.fn(function (this: unknown, _url: string | URL) { return this })
+  vi.stubGlobal('WebSocket', socket)
+  const api = await import('./revisoes')
+  api.conectar('token-sintetico')
+  expect(new URL(socket.mock.calls[0][0]).searchParams.get('token')).toBe('token-sintetico')
+})
