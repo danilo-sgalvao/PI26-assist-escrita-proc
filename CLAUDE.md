@@ -27,7 +27,7 @@ Versões antigas não são apagadas nem sobrescritas.
 | `infra/README.md` | Fluxo, contrato da API, pré-requisitos, deploy e limitações operacionais | Descreve a implementação atual |
 | `infra/template.yaml` | Template AWS SAM com todos os recursos da stack | Fonte da infraestrutura |
 | `frontend/README.md` | Execução do frontend, variáveis `VITE_*` e contrato utilizado | Descreve a implementação atual |
-| `docs/arquitetura/modelo-de-dados-e-api.md` | Design: modelo de dados, contrato da API, fluxo do apoio e fatias de implementação | Aceito como base em 19/11/2026, aberto a mudanças; D1 decidida (texto entra, saída fechada em catálogo) e D3 decidida (turmas na fatia 1); D2, D4 e D5 pendentes |
+| `docs/arquitetura/modelo-de-dados-e-api.md` | Design: modelo de dados, contrato da API, fluxo do apoio e fatias de implementação | Aceito como base em 19/11/2026, aberto a mudanças; decisões D1–D5 tomadas em 19/11/2026 (seção 8): texto entra e saída fechada em catálogo, gatilho em `pedidos/` no S3, turmas na fatia 1, tabela `Interacoes` no DynamoDB, comparação no servidor |
 | `docs/referencias/POC 2.2. Assistente de escrita processual.pdf` | Enunciado da POC: risco moderado, hipótese, salvaguardas, requisitos de dados e métricas de saída | Fonte externa (não editar) |
 | `docs/referencias/AssistentedeEscritaProcessual_2.pdf` | Slides apresentados ao stakeholder (linguagem não técnica) | Referência |
 | `docs/ers/v1.0/ESPECIFICAÇÃO DE REQUISITOS DE SOFTWARE – ERS GRUPO 8.pdf` | ERS v1.0 original: RF01–RF15, RN01–RN06 | Superada pela v2 |

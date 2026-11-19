@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | 0.2 |
+| Versão | 0.3 |
 | Data | 19/11/2026 (v0.1: 16/11/2026) |
-| Autor | Danilo Galvão, com apoio de IA (Claude Code: Claude Fable 5.2 na v0.1, Claude Opus 5.5 na v0.2) |
-| Revisor | pendente |
-| Estado | Aceita como base em 19/11/2026, aberta a mudanças; D1 e D3 decididas; D2, D4 e D5 pendentes |
+| Autor | Danilo Galvão, com apoio de IA (Claude Code: Claude Fable 5.2 na v0.1, Claude Opus 5.5 nas v0.2 e v0.3) |
+| Revisor | Felipe Nunes (pendente) |
+| Estado | Aceita como base em 19/11/2026, aberta a mudanças; decisões D1 a D5 tomadas (seção 8) |
 
 ## 1. Objetivo e limites
 
@@ -23,7 +23,7 @@ Fica fora deste documento: layout das telas, texto do prompt e parâmetros da si
 | Enviar o texto dispara o Bedrock | Salvar não dispara nada; só o **pedido de apoio** dispara | RF07; o salvamento automático a cada minuto não pode acionar o modelo |
 | `consentimento: true` em cada envio | Aceite do termo gravado uma vez por usuário | RF21 |
 | Um único perfil (aluno) | Perfis de estudante e professor, por grupos do Cognito | RF22 |
-| Tabela DynamoDB com chave `id_producao` | Chave `id_producao` + `id_interacao` | Uma produção tem várias interações (RF10) |
+| Tabela DynamoDB `Sugestoes`, com chave `id_producao` | Tabela `Interacoes`, com chave `id_producao` + `id_interacao` (decisão D4) | Uma produção tem várias interações (RF10) |
 | Bedrock recebe só contagens | Bedrock lê o texto e o pedido, mas devolve só códigos de um catálogo escrito pela equipe (decisão D1, seção 7) | RF07, RF08, RF12 |
 
 As Lambdas continuam cinco. `ingestao` passa a atender todas as rotas de escrita (`POST`) e `consulta` todas as de leitura (`GET`), cada uma com um roteador interno por rota. `conexao_websocket` e `autorizador` não mudam.
@@ -41,7 +41,7 @@ A divisão segue o diagrama: o PostgreSQL guarda quem, o quê e quando; o S3 gua
 Chaves no S3:
 
 - `producoes/{id_producao}/conteudo.json`: uma chave por produção. Cada salvamento gera uma nova versão do objeto, e o `VersionId` devolvido pelo S3 é gravado no PostgreSQL. O conteúdo é `{"planejamento": "...", "texto": "..."}`, de modo que cada versão registra o estado completo (o planejamento da etapa Planejar e a redação).
-- `pedidos/{id_producao}/{id_interacao}.json`: um objeto por pedido de apoio, com a mensagem, o trecho selecionado e a versão de referência. **Só este prefixo publica evento no SNS.**
+- `pedidos/{id_producao}/{id_interacao}.json`: um objeto por pedido de apoio, com a mensagem, o trecho selecionado e a versão de referência. **Só este prefixo publica evento no SNS:** o filtro de notificação do bucket troca `redacoes/` por `pedidos/` (decisão D2).
 
 Nenhum objeto, chave ou item contém nome ou e-mail do estudante. A ligação com a pessoa existe apenas no PostgreSQL, pelo `sub` do Cognito.
 
@@ -121,6 +121,7 @@ erDiagram
     text versao_s3 "VersionId do objeto"
     text sha256 "evita versão sem mudança"
     int qtd_palavras
+    int palavras_alteradas "em relação à versão anterior (RF11)"
     timestamptz criada_em
   }
   TRANSICOES_ETAPA {
@@ -159,13 +160,14 @@ Regras do modelo:
 - **Matrícula por e-mail:** o professor inclui o estudante pelo e-mail (RF16). O vínculo com o `sub` é feito no primeiro acesso do estudante, comparando com o e-mail do token. Assim a Lambda não precisa consultar o Cognito.
 - **Versão sem mudança não é gravada:** se o `sha256` do conteúdo for igual ao da última versão, o servidor devolve o número já existente.
 - **Ordem de gravação da versão:** primeiro o S3, depois o PostgreSQL. Se o segundo passo falhar, sobra uma versão órfã no S3, sem efeito para o usuário. A ordem atual (PostgreSQL antes do S3) deixa registros presos em `PROCESSANDO`.
-- **Progresso derivado (RF11):** tempo por etapa, número de versões, interações e colagens saem de consultas sobre essas tabelas. Não há tabela de indicadores.
+- **Progresso derivado (RF11):** tempo por etapa, número de versões, volume de alterações, interações e colagens saem de consultas sobre essas tabelas. Não há tabela de indicadores.
+- **Volume de alterações:** ao salvar uma versão, a `ingestao` compara o conteúdo com a versão anterior e grava `palavras_alteradas`. A comparação é a mesma do RF06 (decisão D5), numa função compartilhada em `infra/lambdas/` usada pela `ingestao` e pela `consulta`.
 - **`interacoes` no PostgreSQL é o índice:** permite contar por categoria e etapa com SQL (RF12). O conteúdo fica no DynamoDB.
 - **Gênero em lista fechada:** `atividades.genero` usa os mesmos valores do catálogo de orientações (seção 7.1), mais `OUTRO`. Os valores são definidos junto com o catálogo.
 - **`revisoes` deixa de ser usada** quando a fatia 3 entrar. `conexoes` permanece como está.
 - **Fora do modelo por enquanto:** devolutiva (RF19, *Could*) e resultado da similaridade (RF15), detalhados quando chegarem as respectivas fatias.
 
-Item do DynamoDB (chave de partição `id_producao`, chave de ordenação `id_interacao`):
+Item do DynamoDB, na tabela `Interacoes`, que substitui a `Sugestoes` (chave de partição `id_producao`, chave de ordenação `id_interacao`; decisão D4). A tabela antiga fica retida pela política da stack e deve ser apagada à mão depois do deploy:
 
 | Atributo | Conteúdo |
 |---|---|
@@ -213,7 +215,7 @@ REST no estágio `v1`, JSON, ID token do Cognito no cabeçalho `Authorization`. 
 | `POST /producoes/{id}/versoes` `{planejamento, texto, tipo}` | Estudante | Salvar versão automática ou marcada; `201` com `numero` | RF04 |
 | `GET /producoes/{id}/versoes?etapa=&tipo=` · `GET /producoes/{id}/versoes/{n}` | Ambos | Histórico com filtro; conteúdo de uma versão | RF05 |
 | `POST /producoes/{id}/etapa` `{para, planejamento, texto}` | Estudante | Avançar ou voltar de etapa; grava versão marcada e a transição | RF17 |
-| `GET /producoes/{id}/comparacao?de=&para=` | Ambos | Comparação por palavras; padrão: primeira marcada × final | RF06 |
+| `GET /producoes/{id}/comparacao?de=&para=` | Ambos | Comparação calculada no servidor, por palavras e pontuação; devolve trechos `IGUAL`, `REMOVIDO` e `INSERIDO`. Padrão: primeira marcada × final | RF06 |
 | `POST /producoes/{id}/colagens` `{trecho}` · `GET /producoes/{id}/colagens` | Estudante (escrita); ambos (leitura) | Registrar e consultar colagens; a etapa vem do servidor | RF18 |
 | `POST /producoes/{id}/submissao` `{planejamento, texto}` | Estudante | Gravar a versão final e bloquear a edição | RF14 |
 
@@ -255,6 +257,8 @@ O caminho é o do diagrama; muda apenas o que entra nele.
 
 Se o Bedrock falhar até esgotar as tentativas da fila, a interação fica `INDISPONIVEL` e o estudante segue escrevendo e salvando normalmente (FA04, RNF08).
 
+**Latência do gatilho (decisão D2).** Segundo a AWS, o aviso do S3 costuma chegar em segundos, mas às vezes leva um minuto ou mais. Se o primeiro deploy mostrar que isso compromete o RNF06, a `ingestao` passa a publicar direto no SNS. A mudança fica restrita a ela e à leitura do evento no processador.
+
 **Saída fechada (decisão D1).** O modelo lê o texto do estudante, mas nada do que ele escreve chega à tela: o estudante só lê textos do catálogo, escritos pela equipe, e trechos do próprio texto. No pior caso, uma instrução escondida na redação produz uma orientação fora de contexto. Regras da conferência:
 
 - JSON no formato exato, com a categoria dentro da lista do RF12;
@@ -288,15 +292,15 @@ Como o estudante só lê textos do catálogo, os limites da decisão B5 passam a
 
 O catálogo traz também o texto fixo de recusa (FA01) e a orientação de reserva. As quatro orientações que existem hoje (`ESTRUTURA`, `PARAGRAFOS`, `FRASES`, `REVISAO`) são os primeiros itens. O tamanho esperado é de algumas dezenas de itens *(sugerido)*. A interação grava o código, o tipo e o texto exibido, além da versão do catálogo, para que editar o catálogo não altere o histórico (RN04).
 
-## 8. Decisões a confirmar
+## 8. Decisões de design
 
 | ID | Decisão | Recomendação | Alternativa |
 |---|---|---|---|
 | **D1** | O texto do estudante é enviado ao Bedrock? | **Decidida em 19/11/2026: o texto entra, a saída é fechada.** O modelo lê o texto, o pedido e o contexto, mas devolve só códigos do catálogo e a localização do trecho; o estudante só lê textos escritos pela equipe (seção 7). Atende RF07, RF08, RF09 e RF12, e a ERS já prevê o envio (RNF04) | Só contagens (código atual): o assistente fica genérico e não classifica pedidos. Saída livre validada: respostas personalizadas, mas a autoria passa a depender de um validador que não detecta paráfrase nem frase nova sobre o tema; fica como evolução futura |
-| **D2** | O que dispara o processamento? | O objeto do pedido no S3 (`pedidos/`), o que mantém o diagrama intacto | A `ingestao` publicar direto no SNS: menos um objeto, mas muda o fluxo 7 do diagrama |
+| **D2** | O que dispara o processamento? | **Decidida em 19/11/2026: o objeto do pedido no S3 (`pedidos/`).** Mantém o diagrama e guarda o pedido antes do processamento (RF10) | A `ingestao` publicar direto no SNS: menor latência e roteamento por tipo mais simples na fatia 5, mas muda o passo 7 do diagrama. Fica como saída se a latência do S3 comprometer o RNF06 |
 | **D3** | Turmas entram agora? | **Decidida em 19/11/2026: sim**, na fatia 1. São duas tabelas e definem quem vê cada atividade. O `CLAUDE.md` lista o RF16 como *Must* | Adiar, como indica "Turmas V2" no diagrama, e deixar toda atividade visível a todos os estudantes |
-| **D4** | Recriar a tabela do DynamoDB com chave de ordenação? | **Sim**; não há dados reais. A tabela antiga fica retida pela política da stack | Um item por produção com lista de interações: limite de 400 KB e gravação concorrente frágil |
-| **D5** | Onde calcular a comparação de versões? | No servidor, com `difflib` (biblioteca padrão do Python), por palavras | No navegador, com uma biblioteca JavaScript |
+| **D4** | Recriar a tabela do DynamoDB com chave de ordenação? | **Decidida em 19/11/2026: sim**, com o recurso renomeado para `Interacoes`. Não há dados reais; a tabela antiga fica retida pela política da stack e é apagada à mão | Um item por produção com lista de interações: limite de 400 KB, gravação concorrente frágil e permissão de alteração, que quebra a imutabilidade da seção 3 |
+| **D5** | Onde calcular a comparação de versões? | **Decidida em 19/11/2026: no servidor**, com `difflib` (biblioteca padrão do Python), por palavras e pontuação. A mesma função calcula `palavras_alteradas` para o RF11 | No navegador, com uma biblioteca JavaScript: troca de par instantânea, mas o RF11 exigiria um segundo cálculo no servidor, e o trabalho cairia na área com menos folga no cronograma |
 
 A D1 muda uma escolha deliberada do código atual, que não envia nenhuma palavra do texto ao modelo, mas mantém o princípio dele: o modelo escolhe, e só a aplicação escreve o que o estudante lê.
 
@@ -307,8 +311,8 @@ A migração `002` cria todas as tabelas de uma vez. Com o contrato fixado, as f
 | Fatia | Entrega | Rotas | Telas |
 |---|---|---|---|
 | **1. Identidade e atividades** | Grupos do Cognito, usuário, termo persistido, turma, matrícula, atividade | `/eu`, `/eu/termo`, `/turmas`, `/atividades` | Professor: turmas e atividades. Estudante: aceite do termo e lista de atividades |
-| **2. Produção e versões** | Produção por atividade, salvamento automático, etapas, histórico, comparação, submissão | `/atividades/{id}/producoes`, `/producoes/{id}` e as de versões, etapa, comparação e submissão | Editor com etapas, histórico e comparação |
-| **3. Assistente** | Catálogo de orientações, pedido de apoio, classificação, conferência da saída, registro da interação | `/producoes/{id}/apoios` | Painel de apoio no editor, com destaque do trecho apontado |
+| **2. Produção e versões** | Produção por atividade, salvamento automático com volume de alterações, etapas, histórico, comparação no servidor, submissão | `/atividades/{id}/producoes`, `/producoes/{id}` e as de versões, etapa, comparação e submissão | Editor com etapas, histórico e comparação |
+| **3. Assistente** | Catálogo de orientações, pedido de apoio (gatilho em `pedidos/`), classificação, conferência da saída, registro da interação (tabela `Interacoes`) | `/producoes/{id}/apoios` | Painel de apoio no editor, com destaque do trecho apontado |
 | **4. Acompanhamento** | Painel do professor, indicadores, colagens | `/atividades/{id}/acompanhamento`, `/producoes/{id}/indicadores`, `/producoes/{id}/colagens` | Painel do professor; "meus registros" do estudante |
 | **5. Similaridade e devolutiva** | Outro consumidor do tópico SNS, acionado pela submissão | A definir | A definir |
 
