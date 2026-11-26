@@ -1,6 +1,6 @@
 # Arquitetura assíncrona AWS SAM
 
-Versão: 0.2 · Data: 11/11/2026 · Autor: equipe com apoio de IA · Revisor: pendente · Estado: implementação para avaliação
+Versão: 0.3 · Data: 26/11/2026 · Autor: equipe com apoio de IA · Revisor: pendente · Estado: implementação para avaliação
 
 O template provisiona Cognito, REST API, WebSocket, S3 privado e versionado, CloudFront, SNS, SQS e DLQ, DynamoDB e cinco Lambdas Python. O PostgreSQL, sua rede e o modelo Bedrock são **pré-requisitos externos**; não são criados pela stack. O acesso direto ao PostgreSQL em Python foi autorizado pelo usuário e diverge da exigência Java dos documentos anteriores: a equipe deve registrar a decisão.
 
@@ -47,6 +47,8 @@ O banco é privado. A migração e o usuário da aplicação são aplicados pelo
 2. Clone o repositório no CloudShell.
 3. Rode `bash infra/scripts/preparar-banco.sh entrelinhas-base`.
 
+O ambiente sai para a internet pelo NAT, para clonar o repositório e instalar o `psql`. Por isso, rode esse passo com `NatLigado=sim`.
+
 O script aplica `infra/migrations/*.sql` em ordem. Elas precisam ser idempotentes, porque ainda não há registro de quais migrações já rodaram. Em seguida, cria o usuário IAM com `SELECT`, `INSERT` e `UPDATE`, e concede `DELETE` só em `conexoes` (RN04).
 
 Os custos são aproximados, em us-east-2:
@@ -67,6 +69,8 @@ Para remover tudo, apague primeiro a stack da aplicação e depois a de pré-req
 
 ## Validar e implantar
 
+O que já foi implantado e testado na conta do projeto, com os resultados, está no [registro de implantação](registro-implantacao.md).
+
 ```powershell
 python -m unittest discover -s infra/tests -v
 sam validate --lint --template-file infra/template.yaml --region <regiao>
@@ -75,6 +79,37 @@ sam deploy --guided
 ```
 
 Informe no deploy `DatabaseHost`, `DatabaseName`, `DatabaseUser`, `DatabaseUserArn`, `PrivateSubnets`, `LambdaSecurityGroups` e `BedrockModelArn`. Use nome de stack curto em minúsculas: ele integra o nome global do bucket. O deploy cria recursos cobrados. As saídas apresentam URLs, pool e cliente Cognito e nomes dos recursos. Publique a SPA no bucket de frontend; CloudFront usa Origin Access Control. Route 53 e domínio próprio não estão configurados.
+
+### Atualizar uma stack que já existe
+
+Gere a lista de mudanças sem aplicar e confira:
+- que nenhum recurso de dados aparece com substituição (`Replacement: True`). São recursos de dados os buckets, a tabela, o Cognito e o RDS;
+- que nada é removido sem querer.
+
+Só então execute a lista.
+
+```powershell
+sam deploy --no-execute-changeset <mesmas opções do deploy anterior>
+aws cloudformation execute-change-set --change-set-name <ARN mostrado pelo sam deploy>
+```
+
+### Publicar o site
+
+Em `frontend/`, preencha o `.env.local` com as saídas da stack (ver `frontend/README.md`) e rode `npm ci` e `npm run build`. Depois, envie os arquivos.
+
+```powershell
+$bucket = aws cloudformation describe-stacks --stack-name entrelinhas --query "Stacks[0].Outputs[?OutputKey=='BucketFrontend'].OutputValue" --output text
+$distribuicao = aws cloudformation describe-stack-resource --stack-name entrelinhas --logical-resource-id DistribuicaoFrontend --query "StackResourceDetail.PhysicalResourceId" --output text
+aws s3 cp frontend/dist/assets "s3://$bucket/assets" --recursive --exclude "*" --include "*.js" --content-type "text/javascript; charset=utf-8" --cache-control "public, max-age=31536000, immutable"
+aws s3 cp frontend/dist/assets "s3://$bucket/assets" --recursive --exclude "*" --include "*.css" --content-type "text/css; charset=utf-8" --cache-control "public, max-age=31536000, immutable"
+aws s3 cp frontend/dist/favicon.svg "s3://$bucket/favicon.svg" --content-type "image/svg+xml" --cache-control "public, max-age=86400"
+aws s3 cp frontend/dist/index.html "s3://$bucket/index.html" --content-type "text/html; charset=utf-8" --cache-control "no-cache"
+aws cloudfront create-invalidation --distribution-id $distribuicao --paths "/*"
+```
+
+- **Tipo de cada arquivo:** é informado explicitamente porque, no Windows, a CLI pode adivinhar um tipo errado para `.js`. O navegador recusa um script de módulo com tipo errado.
+- **Ordem:** o `index.html` vai por último, para nunca apontar para arquivos que ainda não chegaram.
+- **Cache:** o `index.html` não fica em cache, enquanto os arquivos de `assets/` mudam de nome a cada build.
 
 Os testes locais usam dublês dos serviços e não substituem teste integrado na conta AWS. Faça o primeiro teste com dados sintéticos: conexão, POST, recebimento do evento, GET autorizado e recusa de acesso por outro usuário. Revise permissões IAM, observabilidade e custos antes de uso real.
 
