@@ -15,6 +15,29 @@ ORIENTACOES = {
     "FRASES": "Revise o tamanho das frases e avalie se estão claras.",
     "REVISAO": "Releia a redação para verificar clareza, coerência e pontuação.",
 }
+# O modelo responde preenchendo uma ferramenta cujo esquema só aceita os códigos acima. Pedir o
+# array como texto não funciona: o Nova Lite devolve as próprias contagens. O esquema orienta o
+# modelo, mas a garantia continua sendo a validação determinística em analisar().
+FERRAMENTA = "registrar_orientacoes"
+CONFIG_FERRAMENTA = {
+    "tools": [{"toolSpec": {
+        "name": FERRAMENTA,
+        "description": "Registra de um a três códigos de orientação de revisão escolhidos a partir das contagens da redação.",
+        "inputSchema": {"json": {
+            "type": "object",
+            "properties": {"codigos": {"type": "array", "items": {"type": "string", "enum": list(ORIENTACOES)},
+                                       "minItems": 1, "maxItems": 3}},
+            "required": ["codigos"],
+        }},
+    }}],
+    "toolChoice": {"tool": {"name": FERRAMENTA}},
+}
+INSTRUCAO = (
+    "Você recebe apenas contagens de uma redação escolar (palavras, frases e parágrafos). Escolha de um a três "
+    "códigos de orientação: ESTRUTURA (organização em introdução, desenvolvimento e conclusão), PARAGRAFOS "
+    "(divisão em parágrafos), FRASES (tamanho e clareza das frases) e REVISAO (releitura geral). Responda "
+    "somente chamando a ferramenta registrar_orientacoes."
+)
 
 
 def ler_eventos_s3(body):
@@ -45,16 +68,20 @@ def analisar(texto):
     metricas = {"palavras": len(palavras), "frases": len(frases), "paragrafos": len(paragrafos)}
     resposta = boto3.client("bedrock-runtime").converse(
         modelId=os.environ["BEDROCK_MODEL_ID"],
-        system=[{"text": "Retorne somente um array JSON com até três códigos entre ESTRUTURA, PARAGRAFOS, FRASES e REVISAO. Não escreva texto."}],
+        system=[{"text": INSTRUCAO}],
         messages=[{"role": "user", "content": [{"text": json.dumps(metricas)}]}],
-        inferenceConfig={"maxTokens": 100, "temperature": 0},
+        inferenceConfig={"maxTokens": 200, "temperature": 0},
+        toolConfig=CONFIG_FERRAMENTA,
     )
-    if resposta.get("stopReason") != "end_turn":
+    if resposta.get("stopReason") != "tool_use":
         raise ValueError("Resposta Bedrock não concluída")
     blocos = resposta["output"]["message"]["content"]
-    if len(blocos) != 1 or set(blocos[0]) != {"text"}:
+    if len(blocos) != 1 or set(blocos[0]) != {"toolUse"} or blocos[0]["toolUse"].get("name") != FERRAMENTA:
         raise ValueError("Resposta Bedrock inválida")
-    codigos = json.loads(blocos[0]["text"])
+    entrada = blocos[0]["toolUse"].get("input")
+    if not isinstance(entrada, dict) or set(entrada) != {"codigos"}:
+        raise ValueError("Resposta Bedrock inválida")
+    codigos = entrada["codigos"]
     if not isinstance(codigos, list) or not 1 <= len(codigos) <= 3 or any(not isinstance(x, str) or x not in ORIENTACOES for x in codigos):
         raise ValueError("Categorias inválidas")
     return [ORIENTACOES[c] for c in dict.fromkeys(codigos)]
