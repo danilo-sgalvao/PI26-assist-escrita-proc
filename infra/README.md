@@ -25,6 +25,46 @@ O WebSocket usa `wss://.../v1?token=<access-token>`. O autorizador valida o acce
 
 O bundle público de certificados RDS foi obtido da [AWS](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem); revise sua atualização conforme a rotação de certificados.
 
+### Criar os pré-requisitos em uma conta nova
+
+O `infra/pre-requisitos.yaml` cria:
+
+- a VPC, com duas sub-redes privadas e uma pública;
+- o NAT Gateway, controlado pelo parâmetro `NatLigado`;
+- endpoints gratuitos de S3 e DynamoDB;
+- um PostgreSQL `db.t4g.micro`, sem Multi-AZ e com autenticação IAM. A senha do usuário de migração fica no Secrets Manager, gerida pelo RDS.
+
+As saídas têm o mesmo nome dos parâmetros do `template.yaml`.
+
+```powershell
+aws cloudformation deploy --stack-name entrelinhas-base --template-file infra/pre-requisitos.yaml
+aws cloudformation describe-stacks --stack-name entrelinhas-base --query "Stacks[0].Outputs"
+```
+
+O banco é privado. A migração e o usuário da aplicação são aplicados pelo AWS CloudShell em ambiente VPC:
+
+1. Crie o ambiente com a VPC `Rede`, uma das sub-redes privadas e o security group `GrupoAdministracao`.
+2. Clone o repositório no CloudShell.
+3. Rode `bash infra/scripts/preparar-banco.sh entrelinhas-base`.
+
+O script aplica `infra/migrations/*.sql` em ordem. Elas precisam ser idempotentes, porque ainda não há registro de quais migrações já rodaram. Em seguida, cria o usuário IAM com `SELECT`, `INSERT` e `UPDATE`, e concede `DELETE` só em `conexoes` (RN04).
+
+Os custos são aproximados, em us-east-2:
+
+- NAT Gateway com IP público: cerca de US$ 1,20 por dia ligado, mais o tráfego;
+- RDS: cerca de US$ 15 por mês, somando instância, 20 GB gp3 e o segredo.
+
+Para economizar entre as sessões de teste:
+
+```powershell
+aws cloudformation deploy --stack-name entrelinhas-base --template-file infra/pre-requisitos.yaml --parameter-overrides NatLigado=nao
+aws rds stop-db-instance --db-instance-identifier entrelinhas-base-postgres
+```
+
+Sem NAT, a ingestão e a consulta continuam funcionando. O processador, porém, não alcança o Bedrock nem o WebSocket, e as mensagens vão para a DLQ. Um RDS parado volta a ligar sozinho depois de 7 dias.
+
+Para remover tudo, apague primeiro a stack da aplicação e depois a de pré-requisitos. As Lambdas mantêm interfaces de rede nas sub-redes por alguns minutos. O RDS deixa um snapshot final, que é cobrado até ser apagado.
+
 ## Validar e implantar
 
 ```powershell

@@ -1,0 +1,248 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Pré-requisitos da stack do Assistente de Escrita Processual: VPC com sub-redes
+  privadas, saída por NAT Gateway que pode ser ligada e desligada, endpoints
+  gratuitos de S3 e DynamoDB e PostgreSQL (RDS) com autenticação IAM.
+
+Parameters:
+  NatLigado:
+    Type: String
+    AllowedValues: ['sim', 'nao']
+    Default: 'sim'
+    Description: >-
+      'sim' cria o NAT Gateway (cobrado por hora). Sem NAT, o processador não alcança
+      o Bedrock nem o WebSocket, e as mensagens acabam na DLQ.
+  NomeBanco:
+    Type: String
+    Default: entrelinhas
+    AllowedPattern: '^[a-z][a-z0-9_]{0,62}$'
+  UsuarioMestre:
+    Type: String
+    Default: administrador
+    AllowedPattern: '^[a-z][a-z0-9_]{0,15}$'
+    Description: Usuário de migração; a senha fica no Secrets Manager, gerida pelo RDS.
+  UsuarioAplicacao:
+    Type: String
+    Default: entrelinhas_app
+    AllowedPattern: '^[a-z][a-z0-9_]{0,62}$'
+    Description: Usuário com rds_iam criado por infra/scripts/preparar-banco.sh.
+  VersaoPostgres:
+    Type: String
+    Default: '17'
+  ClasseInstancia:
+    Type: String
+    Default: db.t4g.micro
+
+Conditions:
+  ComNat: !Equals [!Ref NatLigado, 'sim']
+
+Resources:
+  Rede:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  SubredePublica:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Rede
+      CidrBlock: 10.20.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-publica'
+
+  SubredePrivadaA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Rede
+      CidrBlock: 10.20.10.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-privada-a'
+
+  SubredePrivadaB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Rede
+      CidrBlock: 10.20.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-privada-b'
+
+  GatewayInternet:
+    Type: AWS::EC2::InternetGateway
+
+  LigacaoGatewayInternet:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Rede
+      InternetGatewayId: !Ref GatewayInternet
+
+  RotasPublicas:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Rede
+
+  RotaInternet:
+    Type: AWS::EC2::Route
+    DependsOn: LigacaoGatewayInternet
+    Properties:
+      RouteTableId: !Ref RotasPublicas
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref GatewayInternet
+
+  AssociacaoPublica:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubredePublica
+      RouteTableId: !Ref RotasPublicas
+
+  IpNat:
+    Type: AWS::EC2::EIP
+    Condition: ComNat
+    DependsOn: LigacaoGatewayInternet
+    Properties:
+      Domain: vpc
+
+  GatewayNat:
+    Type: AWS::EC2::NatGateway
+    Condition: ComNat
+    Properties:
+      AllocationId: !GetAtt IpNat.AllocationId
+      SubnetId: !Ref SubredePublica
+
+  RotasPrivadas:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Rede
+
+  RotaSaidaNat:
+    Type: AWS::EC2::Route
+    Condition: ComNat
+    Properties:
+      RouteTableId: !Ref RotasPrivadas
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref GatewayNat
+
+  AssociacaoPrivadaA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubredePrivadaA
+      RouteTableId: !Ref RotasPrivadas
+
+  AssociacaoPrivadaB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubredePrivadaB
+      RouteTableId: !Ref RotasPrivadas
+
+  # Endpoints de gateway não são cobrados e mantêm S3 e DynamoDB acessíveis sem NAT.
+  EndpointS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref Rede
+      VpcEndpointType: Gateway
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      RouteTableIds: [!Ref RotasPrivadas]
+
+  EndpointDynamoDb:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref Rede
+      VpcEndpointType: Gateway
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
+      RouteTableIds: [!Ref RotasPrivadas]
+
+  GrupoLambdas:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambdas da aplicacao (saida liberada)
+      VpcId: !Ref Rede
+
+  GrupoAdministracao:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: CloudShell em VPC para migracoes (saida liberada)
+      VpcId: !Ref Rede
+
+  GrupoBanco:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL acessivel apenas pelas Lambdas e pela administracao
+      VpcId: !Ref Rede
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref GrupoLambdas
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref GrupoAdministracao
+
+  SubredesBanco:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Sub-redes privadas do PostgreSQL
+      SubnetIds: [!Ref SubredePrivadaA, !Ref SubredePrivadaB]
+
+  Banco:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub '${AWS::StackName}-postgres'
+      Engine: postgres
+      EngineVersion: !Ref VersaoPostgres
+      DBInstanceClass: !Ref ClasseInstancia
+      AllocatedStorage: '20'
+      StorageType: gp3
+      StorageEncrypted: true
+      MultiAZ: false
+      PubliclyAccessible: false
+      DBName: !Ref NomeBanco
+      MasterUsername: !Ref UsuarioMestre
+      ManageMasterUserPassword: true
+      EnableIAMDatabaseAuthentication: true
+      DBSubnetGroupName: !Ref SubredesBanco
+      VPCSecurityGroups: [!Ref GrupoBanco]
+      BackupRetentionPeriod: 1
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot: true
+      DeletionProtection: false
+
+Outputs:
+  # As saídas com nome de parâmetro alimentam o deploy de infra/template.yaml.
+  DatabaseHost:
+    Value: !GetAtt Banco.Endpoint.Address
+  DatabaseName:
+    Value: !Ref NomeBanco
+  DatabaseUser:
+    Value: !Ref UsuarioAplicacao
+  DatabaseUserArn:
+    Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${Banco.DbiResourceId}/${UsuarioAplicacao}'
+  PrivateSubnets:
+    Value: !Join [',', [!Ref SubredePrivadaA, !Ref SubredePrivadaB]]
+  LambdaSecurityGroups:
+    Value: !Ref GrupoLambdas
+  GrupoAdministracao:
+    Description: Security group para o ambiente VPC do CloudShell
+    Value: !Ref GrupoAdministracao
+  Rede:
+    Value: !Ref Rede
+  IdentificadorBanco:
+    Description: Para aws rds stop-db-instance / start-db-instance
+    Value: !Ref Banco
+  SegredoMestre:
+    Description: Segredo com a senha do usuário de migração (gerido pelo RDS)
+    Value: !GetAtt Banco.MasterUserSecret.SecretArn
+  NatLigado:
+    Value: !Ref NatLigado
