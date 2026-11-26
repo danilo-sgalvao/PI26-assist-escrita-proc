@@ -8,7 +8,7 @@ O template provisiona Cognito, REST API, WebSocket, S3 privado e versionado, Clo
 
 1. `POST /v1/producoes`, protegido pelo Cognito, recebe JSON `{"texto":"...", "consentimento":true}` e retorna `202` com `id_producao` e `status`. Cada submissão cria um identificador e uma chave S3 próprios. O limite é 100.000 bytes no corpo.
 2. S3 publica o evento `ObjectCreated` no SNS e o SQS entrega ao processador. Ele valida bucket, chave e versão, consulta o proprietário no PostgreSQL e lê a **versão exata** no S3.
-3. Para evitar enviar a redação ou identificadores ao modelo, a função calcula somente quantidades de palavras, frases e parágrafos. O Bedrock recebe essas métricas e retorna códigos de uma lista fechada; a aplicação só exibe orientações fixas. O mecanismo oferece orientação estrutural genérica, não revisão semântica nem diagnóstico ortográfico.
+3. Para evitar enviar a redação ou identificadores ao modelo, a função calcula somente quantidades de palavras, frases e parágrafos. O Bedrock recebe essas métricas e retorna códigos de uma lista fechada, preenchendo uma ferramenta obrigatória (*tool use*) cujo esquema só aceita esses códigos; a aplicação valida a resposta e só exibe orientações fixas. O mecanismo oferece orientação estrutural genérica, não revisão semântica nem diagnóstico ortográfico.
 4. O processador grava o resultado condicionalmente no DynamoDB, marca a revisão como concluída e notifica as conexões do aluno. Reentregas são idempotentes quanto ao resultado; a notificação pode ser duplicada, e clientes devem tolerá-la.
 5. O cliente consulta `GET /v1/producoes/{id}` com token Cognito. A consulta só retorna a revisão ao dono; o resultado inclui status e sugestões.
 
