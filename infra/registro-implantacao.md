@@ -1,6 +1,6 @@
 # Registro de implantação na AWS
 
-Versão: 0.1 · Data: 26/11/2026 · Autor: Danilo Galvão, com apoio de IA · Revisor: pendente · Estado: primeiro deploy feito; teste ponta a ponta pendente
+Versão: 0.2 · Data: 26/11/2026 · Autor: Danilo Galvão, com apoio de IA · Revisor: pendente · Estado: primeiro deploy feito e recursos removidos; teste ponta a ponta pendente
 
 Este arquivo registra cada implantação e cada teste feitos na conta AWS do projeto: o que foi feito, como, com que resultado e com que evidência. O passo a passo para repetir está no [README](README.md). Cada nova sessão entra como uma seção nova no fim, e as anteriores não são alteradas.
 
@@ -203,3 +203,39 @@ São justamente os riscos que motivaram o deploy, e o teste ponta a ponta existe
 ### Uso de IA
 
 As implantações, os diagnósticos, as correções e este registro foram feitos com Claude Code (Claude Opus 5.5) a pedido de Danilo Galvão, que aprovou cada passo que criava ou alterava recursos na AWS. A revisão é da equipe.
+
+## 26/11/2026: remoção de todos os recursos
+
+**Decisão:** como não haveria teste na mesma noite, Danilo optou por apagar tudo em vez de deixar desligado. Recriar só custa tempo (cerca de 30 minutos) e a repetição do passo do CloudShell.
+
+**Antes de apagar, foi confirmado que não havia dados:**
+- o bucket das redações e a tabela de sugestões estavam vazios;
+- não havia nenhum usuário no Cognito;
+- não havia nenhum grupo de logs, porque as Lambdas nunca rodaram.
+
+### Ordem e resultado
+
+1. **Stack `entrelinhas`:** apagada (`DELETE_COMPLETE`), sem falhas. O mais demorado foi o CloudFront, que precisa ser desativado antes de sair.
+2. **Recursos guardados pelo template (`DeletionPolicy: Retain`):** apagados à mão:
+   - o bucket do site, com os 4 arquivos publicados;
+   - o bucket das redações, vazio;
+   - a tabela de sugestões, vazia.
+3. **Stack `aws-sam-cli-managed-default`:** o bucket só tinha o pacote do código e duas versões do template enviadas nos deploys. Foi esvaziado e apagado junto com a stack.
+4. **Stack `entrelinhas-base`:**
+   - as interfaces de rede das Lambdas já tinham sido liberadas, então não foi preciso esperar;
+   - o RDS foi apagado mesmo parado, e o segredo da senha saiu junto;
+   - o template gerou o snapshot final (`DeletionPolicy: Snapshot`). Como o banco não tinha dados, o snapshot foi apagado.
+5. **Inventário final, em us-east-2 e em us-east-1:** não sobrou nenhum destes recursos:
+   - stack, Lambda, API REST ou WebSocket;
+   - fila, tópico, pool do Cognito ou tabela;
+   - bucket do projeto, instância ou snapshot manual do RDS;
+   - segredo, VPC fora da padrão ou IP público;
+   - distribuição, função ou controle de acesso do CloudFront;
+   - Web ACL ou grupo de logs.
+
+### Para recriar
+
+- **Passo a passo:** siga o README desde "Criar os pré-requisitos em uma conta nova".
+- **Endereços e IDs:** todos mudam. Refaça o build do site com as saídas novas.
+- **Pendências:** as da seção anterior continuam valendo, mas o item 1 passa a ser **recriar as duas stacks e repetir o passo do CloudShell**, em vez de religar o NAT e o banco.
+- **CloudShell:** o ambiente em VPC usado no preparo do banco já não ocupava a rede. Se ainda aparecer no console, pode ser apagado, porque a VPC dele não existe mais.

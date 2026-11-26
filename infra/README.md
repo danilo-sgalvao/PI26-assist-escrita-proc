@@ -65,7 +65,10 @@ aws rds stop-db-instance --db-instance-identifier entrelinhas-base-postgres
 
 Sem NAT, a ingestão e a consulta continuam funcionando. O processador, porém, não alcança o Bedrock nem o WebSocket, e as mensagens vão para a DLQ. Um RDS parado volta a ligar sozinho depois de 7 dias.
 
-Para remover tudo, apague primeiro a stack da aplicação e depois a de pré-requisitos. As Lambdas mantêm interfaces de rede nas sub-redes por alguns minutos. O RDS deixa um snapshot final, que é cobrado até ser apagado.
+Para remover tudo:
+1. **Stack da aplicação:** apague-a primeiro. Os dois buckets e a tabela ficam guardados (`DeletionPolicy: Retain`). Confira se há dados, esvazie os buckets, incluindo as versões antigas, e apague-os à mão junto com a tabela.
+2. **Stack de pré-requisitos:** apague-a depois. As Lambdas mantêm interfaces de rede nas sub-redes por alguns minutos, e a remoção da rede espera por elas. O RDS deixa um snapshot final, que é cobrado até ser apagado.
+3. **Stack `aws-sam-cli-managed-default`:** o `sam deploy --resolve-s3` a cria para guardar os pacotes do deploy. Ela pode ser apagada depois de esvaziar o bucket, e o próximo deploy a recria.
 
 ## Validar e implantar
 
