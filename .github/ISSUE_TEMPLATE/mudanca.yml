@@ -1,0 +1,102 @@
+name: Pedido de mudança (MUD-nnn)
+description: Propor uma manutenção preventiva, adaptativa, aditiva ou perfectiva, ou uma mudança de escopo (processo em docs/manutencao/processo-de-manutencao.md).
+title: "MUD-nnn — "
+labels: ["mudança"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Preencha a parte do **pedido**. A área A confirma a categoria e troca `nnn` pelo próximo número livre na triagem.
+        Mudança de requisito (ERS) precisa da aprovação do professor; mudança de arquitetura vira ADR (plano v1.2, seção 12.3).
+        Defeito usa o formulário **Defeito**.
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição da mudança
+      description: O que deve mudar, do ponto de vista de quem usa ou mantém o sistema.
+    validations:
+      required: true
+  - type: dropdown
+    id: categoria
+    attributes:
+      label: Categoria ISO/IEC/IEEE 14764
+      options:
+        - "Preventiva — corrige defeito latente antes que cause falha"
+        - "Adaptativa — mantém o sistema utilizável num ambiente que mudou"
+        - "Aditiva — acrescenta funcionalidade nova"
+        - "Perfectiva — melhora desempenho, manutenibilidade ou documentação"
+    validations:
+      required: true
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de mudança (plano v1.2, Tabela 94)
+      description: Define quem aprova.
+      options:
+        - Dentro do escopo atual (sem mudar requisito)
+        - Requisito ou escopo (altera a ERS)
+        - Arquitetura (gera ADR)
+        - Stack ou versão de tecnologia
+        - Cronograma
+    validations:
+      required: true
+  - type: textarea
+    id: motivo
+    attributes:
+      label: Motivo
+      description: Por que mudar agora; origem (professor, ERS, decisão, risco, dívida técnica).
+    validations:
+      required: true
+  - type: input
+    id: requisitos
+    attributes:
+      label: RF/RN/RNF afetado
+      placeholder: "ex.: RF04, RN04"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### Análise de impacto e decisão
+        Os campos abaixo podem ficar vazios na abertura. O dono técnico da área afetada preenche a análise; quem aprova registra a decisão.
+  - type: checkboxes
+    id: impacto
+    attributes:
+      label: Impacto
+      options:
+        - label: Código (frontend/, infra/lambdas/)
+        - label: Dados (migração, S3, DynamoDB, registros já gravados)
+        - label: Documentação (ERS, plano, ADR, READMEs, contrato da API)
+        - label: Testes (testes novos, regressão afetada)
+  - type: textarea
+    id: analise
+    attributes:
+      label: Análise de impacto
+      description: Arquivos e componentes afetados, alternativas consideradas, riscos para autoria (RN01/RN02), privacidade e custo na AWS.
+  - type: input
+    id: estimativa
+    attributes:
+      label: Estimativa (horas)
+      description: Itens acima de 4 h são quebrados (DoR).
+      placeholder: "ex.: 3 h"
+  - type: dropdown
+    id: decisao
+    attributes:
+      label: Decisão
+      options:
+        - Pendente
+        - Aprovado
+        - Adiado
+        - Rejeitado
+  - type: input
+    id: aprovador
+    attributes:
+      label: Quem aprovou e quando
+      description: Nunca o autor do pedido nem o responsável pela implementação.
+      placeholder: "@usuario, dd/mm/aaaa"
+  - type: input
+    id: responsavel
+    attributes:
+      label: Responsável pela implementação
+      placeholder: "@usuario"
