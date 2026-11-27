@@ -36,7 +36,8 @@ class FluxoIntegrado(unittest.TestCase):
         class Bedrock:
             def converse(self, **kw):
                 self.request = kw
-                return {"stopReason": "end_turn", "output": {"message": {"content": [{"text": '["REVISAO"]'}]}}}
+                return {"stopReason": "tool_use", "output": {"message": {"content": [
+                    {"toolUse": {"toolUseId": "t1", "name": "registrar_orientacoes", "input": {"codigos": ["REVISAO"]}}}]}}}
         class Gateway:
             def post_to_connection(self, **kw): notificacoes.append(kw)
         s3, bedrock, gateway = S3(), Bedrock(), Gateway()

@@ -23,6 +23,11 @@ def evento_s3(version="v1"):
                 "key": f"redacoes%2F{ID}.txt", "versionId": version}}}]}
 
 
+def resposta_ferramenta(entrada, nome="registrar_orientacoes"):
+    return {"stopReason": "tool_use", "output": {"message": {"content": [
+        {"toolUse": {"toolUseId": "t1", "name": nome, "input": entrada}}]}}}
+
+
 def conexao(linhas=None):
     conn = MagicMock()
     conn.__enter__.return_value = conn
@@ -77,14 +82,33 @@ class TestLambdas(unittest.TestCase):
 
     def test_analise_nao_envia_texto_ao_modelo_e_apenas_retorna_frases_fixas(self):
         bedrock = MagicMock()
-        bedrock.converse.return_value = {"stopReason": "end_turn", "output": {"message": {"content": [{"text": '["REVISAO"]'}]}}}
+        bedrock.converse.return_value = resposta_ferramenta({"codigos": ["REVISAO", "FRASES", "REVISAO"]})
         with patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
             saida = processador.analisar("Nome Confidencial. Redação privada!")
-        self.assertEqual(saida, [processador.ORIENTACOES["REVISAO"]])
+        self.assertEqual(saida, [processador.ORIENTACOES["REVISAO"], processador.ORIENTACOES["FRASES"]])
         self.assertNotIn("Confidencial", str(bedrock.converse.call_args))
-        bedrock.converse.return_value["output"]["message"]["content"][0]["text"] = '["texto inventado"]'
-        with patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
-            with self.assertRaises(ValueError): processador.analisar("texto")
+        config = bedrock.converse.call_args.kwargs["toolConfig"]
+        self.assertEqual(config["toolChoice"], {"tool": {"name": processador.FERRAMENTA}})
+        esquema = config["tools"][0]["toolSpec"]["inputSchema"]["json"]["properties"]["codigos"]
+        self.assertEqual(esquema["items"]["enum"], list(processador.ORIENTACOES))
+
+    def test_analise_rejeita_saida_fora_do_catalogo(self):
+        # A primeira é a resposta real do Nova Lite ao prompt antigo, que pedia o array como texto.
+        invalidas = [
+            {"stopReason": "end_turn", "output": {"message": {"content": [{"text": '```json\n{\n  "paragrafos": 5,\n  "frases": 18\n}\n```'}]}}},
+            resposta_ferramenta({"codigos": ["texto inventado"]}),
+            resposta_ferramenta({"codigos": []}),
+            resposta_ferramenta({"codigos": ["REVISAO", "FRASES", "ESTRUTURA", "PARAGRAFOS"]}),
+            resposta_ferramenta({"codigos": ["REVISAO"], "comentario": "Troque a primeira frase por..."}),
+            resposta_ferramenta({"codigos": ["REVISAO"]}, nome="outra_ferramenta"),
+            {"stopReason": "tool_use", "output": {"message": {"content": [{"text": "Sugiro reescrever assim:"}, {"toolUse": {"toolUseId": "t1", "name": processador.FERRAMENTA, "input": {"codigos": ["REVISAO"]}}}]}}},
+            {"stopReason": "max_tokens", "output": {"message": {"content": [{"toolUse": {"toolUseId": "t1", "name": processador.FERRAMENTA, "input": {"codigos": ["REVISAO"]}}}]}}},
+        ]
+        for resposta in invalidas:
+            bedrock = MagicMock()
+            bedrock.converse.return_value = resposta
+            with self.subTest(resposta=resposta), patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
+                with self.assertRaises(ValueError): processador.analisar("texto")
 
     def test_sqs_valida_origem_versao_e_relata_apenas_falha(self):
         mensagem = {"messageId": "a", "body": json.dumps(evento_s3())}
