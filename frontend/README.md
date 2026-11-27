@@ -24,6 +24,7 @@ O build em `dist/` pode ser enviado ao bucket de frontend e entregue pelo CloudF
 
 ## Contrato utilizado
 
+- `GET /saude`: sem autenticação; HTTP 200 quando a API está disponível. É consultada pela página do termo de ciência. Sem `VITE_API_URL`, a página informa "API indisponível no momento." e não faz a requisição, porque a SPA não tem proxy nem rota própria para a API (DEF-001).
 - `POST /producoes`: ID token no cabeçalho `Authorization`; JSON `{texto, consentimento: true}`; HTTP 202 com `{id_producao, status}`.
 - `GET /producoes/{id}`: mesmo ID token; resposta `{id_producao, status, sugestoes: string[]}`.
 - WebSocket: token de acesso Cognito no parâmetro `token`; a mensagem `{tipo: "REVISAO_DISPONIVEL", id_producao}` dispara nova consulta REST. O token não deve constar em logs de requisição. Na indisponibilidade do WebSocket, a interface consulta revisões em andamento a cada 10 segundos.
