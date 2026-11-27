@@ -1,6 +1,8 @@
 """Recupera uma revisão apenas para seu proprietário autenticado."""
 import os
+
 import boto3
+
 from comum import banco, resposta
 
 

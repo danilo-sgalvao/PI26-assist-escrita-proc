@@ -7,3 +7,7 @@ backend/target/
 .env.*
 !.env.example
 .aws-sam/
+infra/.coverage
+infra/coverage.xml
+infra/htmlcov/
+frontend/coverage/

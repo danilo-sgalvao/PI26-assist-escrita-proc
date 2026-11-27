@@ -1,0 +1,101 @@
+# Integração contínua (T69, #75): testes, lint, análise estática e cobertura.
+# Não usa credenciais nem segredos: nada aqui acessa a conta AWS.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (lint, testes, cobertura, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npm run build
+      - name: Publica relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-frontend
+          path: frontend/coverage/
+          if-no-files-found: warn
+
+  python:
+    name: Python (ruff, bandit, testes, cobertura)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: infra/lambdas/requirements.txt
+      - name: Instala dependências
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r infra/lambdas/requirements.txt
+          python -m pip install ruff==0.17.6 bandit==1.9.4 coverage==7.17.5
+      - name: Ruff
+        run: ruff check infra/ --output-format github
+      - name: Bandit
+        run: bandit -r infra/lambdas
+      - name: Testes com cobertura
+        run: coverage run --rcfile=infra/.coveragerc -m unittest discover -s infra/tests -v
+      - name: Relatório de cobertura
+        if: ${{ !cancelled() }}
+        run: |
+          coverage report --rcfile=infra/.coveragerc
+          coverage xml --rcfile=infra/.coveragerc
+          coverage html --rcfile=infra/.coveragerc
+          {
+            echo '### Cobertura do Python (infra/lambdas)'
+            echo '```'
+            coverage report --rcfile=infra/.coveragerc
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publica relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-python
+          path: |
+            infra/coverage.xml
+            infra/htmlcov/
+          if-no-files-found: warn
+
+  infra:
+    name: Infra (sam validate --lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - name: Valida o template SAM
+        run: sam validate --lint --template-file infra/template.yaml --region us-east-2

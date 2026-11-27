@@ -5,7 +5,9 @@ import json
 import logging
 import os
 import uuid
+
 import boto3
+
 from comum import banco, resposta
 
 log = logging.getLogger(__name__)
