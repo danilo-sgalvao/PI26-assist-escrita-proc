@@ -9,7 +9,7 @@ Trabalho da disciplina **Manutenção de Software** (UFG, 6º semestre). Prova d
 
 Monorepo com três pastas:
 - `frontend/`: SPA em React + TypeScript (nome de produto na interface: "Entrelinhas");
-- `infra/`: template AWS SAM, Lambdas em Python, migração SQL e testes;
+- `infra/`: template AWS SAM, template dos pré-requisitos (rede e PostgreSQL), Lambdas em Python, migração SQL, script de preparo do banco e testes;
 - `docs/`: documentos do projeto.
 
 Não existe pasta `backend/`: o backend Java/Spring Boot foi removido do `main` em 11/11/2026. Também não existe `.github/` (sem CI por enquanto).
@@ -26,6 +26,8 @@ Versões antigas não são apagadas nem sobrescritas.
 | `docs/arquitetura-aluno-processamento.png` | Diagrama da arquitetura AWS (fluxo do aluno e processamento assíncrono) | **Arquitetura vigente** |
 | `infra/README.md` | Fluxo, contrato da API, pré-requisitos, deploy e limitações operacionais | Descreve a implementação atual |
 | `infra/template.yaml` | Template AWS SAM com todos os recursos da stack | Fonte da infraestrutura |
+| `infra/pre-requisitos.yaml` | Template CloudFormation da stack de pré-requisitos (`entrelinhas-base`): VPC, NAT que liga e desliga (`NatLigado`) e PostgreSQL com autenticação IAM | Fonte dos pré-requisitos |
+| `infra/registro-implantacao.md` | Registro datado de cada implantação e teste na conta AWS: o que foi feito, como, resultado e evidência | Uma seção por sessão; as anteriores não são alteradas |
 | `frontend/README.md` | Execução do frontend, variáveis `VITE_*` e contrato utilizado | Descreve a implementação atual |
 | `docs/arquitetura/modelo-de-dados-e-api.md` | Design: modelo de dados, contrato da API, fluxo do apoio e fatias de implementação | Aceito como base em 19/11/2026, aberto a mudanças; decisões D1–D5 tomadas em 19/11/2026 (seção 8): texto entra e saída fechada em catálogo, gatilho em `pedidos/` no S3, turmas na fatia 1, tabela `Interacoes` no DynamoDB, comparação no servidor |
 | `docs/referencias/POC 2.2. Assistente de escrita processual.pdf` | Enunciado da POC: risco moderado, hipótese, salvaguardas, requisitos de dados e métricas de saída | Fonte externa (não editar) |
@@ -69,7 +71,7 @@ A arquitetura e o design já iniciados no repositório são os permanentes, mesm
 - **Lambdas (Python 3.12, em `infra/lambdas/`):** `ingestao`, `consulta`, `conexao_websocket`, `autorizador` e `processador_bedrock`; `comum.py` concentra a conexão com o PostgreSQL (autenticação IAM e TLS).
 - **Dados:**
   - S3 versionado guarda o texto das redações (`redacoes/<id>.txt`);
-  - RDS PostgreSQL guarda os metadados (`revisoes`, `conexoes`); a migração `infra/migrations/001_inicial.sql` é aplicada manualmente;
+  - RDS PostgreSQL guarda os metadados (`revisoes`, `conexoes`). O banco é privado. A migração `infra/migrations/001_inicial.sql` é aplicada pelo `infra/scripts/preparar-banco.sh`, num CloudShell em VPC. O script também cria o usuário da aplicação, sem `DELETE` em `revisoes` (RN04);
   - DynamoDB guarda as sugestões, com chave `id_producao`.
 - **Fluxo:**
   1. o aluno envia o texto e recebe `202` com `id_producao`;
@@ -80,6 +82,11 @@ A arquitetura e o design já iniciados no repositório são os permanentes, mesm
 - **Defesa da RN01/RN02:** o texto do aluno **não** é enviado ao modelo. O processador calcula apenas as quantidades de palavras, frases e parágrafos; o Bedrock devolve códigos de uma lista fechada (`ESTRUTURA`, `PARAGRAFOS`, `FRASES`, `REVISAO`); a aplicação exibe somente orientações fixas, e qualquer saída fora da lista é rejeitada. Essa validação determinística é a garantia final, não o prompt. **Decisão D1 (19/11/2026), a implementar na fatia 3:** o texto e o pedido do aluno passam a ser enviados ao modelo, mas a saída continua fechada. O Bedrock devolve só códigos de um catálogo escrito pela equipe e a localização do trecho, e o aluno só lê textos do catálogo (ver `docs/arquitetura/modelo-de-dados-e-api.md`, seção 7).
 - **Versões:** cada envio gera um identificador e um objeto próprios no S3 versionado. Ainda não há agrupamento das versões de uma mesma produção, e o histórico exibido ao aluno fica só no `sessionStorage` do navegador.
 - **Diferenças entre o diagrama e o código:** Route 53 e domínio próprio não estão configurados; a API REST não é um CRUD completo; "Turmas" ainda não existe na migração.
+- **Implantação:**
+  - fica na região `us-east-2`, a única do projeto AWS;
+  - são duas stacks: `entrelinhas-base` (pré-requisitos) e `entrelinhas` (aplicação). A base é criada primeiro e apagada por último;
+  - no primeiro deploy, o modelo foi o `amazon.nova-lite-v1:0`, o único modelo de texto da Amazon com chamada direta (*on-demand*) na região;
+  - o estado e os resultados de cada implantação ficam em `infra/registro-implantacao.md`.
 
 ## Propostas do plano mestre (valem até virar ADR ou mudança aprovada)
 
@@ -107,7 +114,9 @@ npm run lint
 npm run build
 ```
 
-Os testes da infra usam dublês dos serviços AWS e não substituem o teste integrado na conta. O deploy cria recursos cobrados; o PostgreSQL, a rede e o modelo Bedrock são pré-requisitos externos à stack.
+Os testes da infra usam dublês dos serviços AWS e não substituem o teste integrado na conta. Sem `boto3` e `psycopg` na máquina, rode-os no container `public.ecr.aws/sam/build-python3.12` (comando no registro de implantação). Se o Node for anterior ao 22.22.2, os testes do frontend nem chegam a iniciar; rode-os no container `node:22`.
+
+O deploy cria recursos cobrados. O PostgreSQL e a rede vêm da stack de pré-requisitos (`infra/pre-requisitos.yaml`), e o modelo Bedrock é informado no deploy. Ao fim de cada sessão de teste, desligue o NAT e pare o RDS (ver `infra/README.md`).
 
 ## Convenções
 
@@ -137,6 +146,7 @@ Os testes da infra usam dublês dos serviços AWS e não substituem o teste inte
   - ainda não existem o papel do professor, atividades, etapas (RF17), turmas, acompanhamento e similaridade (RF15);
   - o assistente só dá orientação estrutural genérica, a partir de contagens. Não cobre as categorias de apoio da ERS nem orienta sobre o conteúdo;
   - falta agrupar as versões de uma mesma produção e ler o histórico pelo servidor.
+- **Teste ponta a ponta na AWS ainda não feito:** o primeiro deploy (26/11/2026) criou as stacks, preparou o banco e publicou o site, e tudo foi removido no mesmo dia. As Lambdas ainda não rodaram contra o banco real, nem a cadeia S3 → SNS → SQS → Bedrock → WebSocket. O próximo teste começa recriando as duas stacks. O registro de implantação lista o que falta.
 - **Limitações operacionais** (detalhes no `infra/README.md`): S3 e PostgreSQL não formam transação, então pode sobrar registro em `PROCESSANDO`; a DLQ precisa de monitoramento; a notificação por WebSocket pode se repetir ou se perder.
 - **Tarefas e issues:** T01–T65 foram escritas e estimadas para a arquitetura anterior e precisam de revisão. Os commits de 11/11/2026 entraram direto no `main`, sem PR e sem citar issue. Os PRs #1–#3, do backend Spring e da base RAG, continuam abertos.
 - O **cronograma é fixo** (B12): 6 semanas, 10 h por pessoa por semana. A v1.2 tem 151 h de tarefas (a v1.1 tinha 144 h) e 5 h de reserva. A área B (frontend) só tem 0,5 h de reserva. Nenhuma área passa de 6,5 h de tarefas por semana. Essas horas foram estimadas para a arquitetura anterior.
