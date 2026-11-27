@@ -27,7 +27,7 @@ test('autentica no Cognito e usa o ID token nas rotas de revisão', async () => 
 
 test('abre WebSocket seguro com o token de acesso', async () => {
   vi.stubEnv('VITE_WEBSOCKET_URL', 'wss://socket.exemplo/v1')
-  const socket = vi.fn(function (this: unknown, _url: string | URL) { return this })
+  const socket = vi.fn(function (this: unknown, url: string | URL) { void url; return this })
   vi.stubGlobal('WebSocket', socket)
   const api = await import('./revisoes')
   api.conectar('token-sintetico')
