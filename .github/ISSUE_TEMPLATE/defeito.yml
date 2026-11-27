@@ -1,0 +1,120 @@
+name: Defeito (DEF-nnn)
+description: Relatar um defeito para manutenção corretiva ou emergencial (processo em docs/manutencao/processo-de-manutencao.md).
+title: "DEF-nnn — "
+labels: ["defeito"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Preencha a parte do **relato**. A área A confirma categoria e severidade e troca `nnn` pelo próximo número livre na triagem.
+        **Não cole dados reais de alunos** (nomes, e-mails, textos, tokens) em descrições, prints ou logs (RNF01).
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição
+      description: O que está errado, em uma ou duas frases.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      description: Ambiente (local, conta AWS, navegador), dados sintéticos usados e cada passo.
+      placeholder: |
+        1. Abrir ...
+        2. Clicar em ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: obtido
+    attributes:
+      label: Resultado obtido
+      description: Mensagem de erro, status HTTP, print ou trecho de log (sem dados reais).
+    validations:
+      required: true
+  - type: dropdown
+    id: severidade
+    attributes:
+      label: Severidade (plano v1.2, Tabela 88)
+      options:
+        - "Bloqueante — impede o fluxo principal, viola RN01/RN02/RN04, expõe dados de outro usuário ou envia identificador do aluno ao LLM"
+        - "Alta — um RF não atende seus CA"
+        - "Média — comportamento incorreto com contorno simples"
+        - "Baixa — cosmético ou de texto"
+    validations:
+      required: true
+  - type: dropdown
+    id: categoria
+    attributes:
+      label: Categoria ISO/IEC/IEEE 14764
+      description: Emergencial só para correção não programada que mantém a demonstração ou a operação de pé; ela é seguida de um registro corretivo completo.
+      options:
+        - Corretiva
+        - Emergencial
+    validations:
+      required: true
+  - type: textarea
+    id: motivo
+    attributes:
+      label: Motivo / efeito no usuário
+      description: Por que corrigir, quem é afetado e com que frequência.
+    validations:
+      required: true
+  - type: input
+    id: requisitos
+    attributes:
+      label: RF/RN/RNF afetado
+      placeholder: "ex.: RF21, RNF01"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### Análise e decisão
+        Os campos abaixo podem ficar vazios na abertura. O dono técnico da área afetada e a área A completam editando a issue ou em comentário.
+  - type: checkboxes
+    id: impacto
+    attributes:
+      label: Impacto
+      description: O que a correção altera.
+      options:
+        - label: Código (frontend/, infra/lambdas/)
+        - label: Dados (migração, S3, DynamoDB, registros já gravados)
+        - label: Documentação (ERS, plano, ADR, READMEs, contrato da API)
+        - label: Testes (teste novo de regressão, suítes afetadas)
+  - type: textarea
+    id: analise
+    attributes:
+      label: Análise de impacto e causa
+      description: Arquivos e componentes afetados, causa provável, riscos para autoria (RN01/RN02) e privacidade.
+  - type: input
+    id: estimativa
+    attributes:
+      label: Estimativa (horas)
+      placeholder: "ex.: 2 h"
+  - type: dropdown
+    id: decisao
+    attributes:
+      label: Decisão
+      options:
+        - Pendente
+        - Aprovado
+        - Adiado
+        - Rejeitado
+        - Duplicado
+    validations:
+      required: false
+  - type: input
+    id: responsavel
+    attributes:
+      label: Responsável pela correção
+      description: Usuário do GitHub. O revisor do anel (A→B→C→D→A) é outra pessoa.
+      placeholder: "@usuario"

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Processo de manutenção
+    url: https://github.com/danilo-sgalvao/PI26-assist-escrita-proc/blob/main/docs/manutencao/processo-de-manutencao.md
+    about: Como um defeito ou pedido de mudança é triado, analisado, aprovado e fechado.

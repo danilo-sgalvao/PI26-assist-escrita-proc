@@ -1,0 +1,22 @@
+# CODEOWNERS — revisores obrigatórios por pasta (plano v1.2, seção 10.4)
+# Processo: docs/manutencao/processo-de-manutencao.md
+#
+# DIVISÃO PROVISÓRIA. As áreas A–D ainda não foram atribuídas (tarefa T70).
+# Enquanto isso, o primeiro dono de cada pasta é quem mais fez commits nela
+# na main em 26/11/2026 (git log), e o segundo garante que sempre haja
+# alguém além do autor para aprovar. Trocar pelos donos das áreas quando a
+# T70 for concluída.
+#
+#   frontend/  -> Felipe (único autor de commits) + Enzo
+#   infra/     -> Felipe (único autor de commits) + Danilo
+#   docs/      -> Danilo (mais commits) + Luiz
+#   .github/   -> Danilo (admin do repositório) + Luiz (autor da T68)
+#
+# Basta a aprovação de um dos donos listados. O autor do PR nunca conta
+# como aprovação (anel A→B→C→D→A). A última regra que casa com o caminho vale.
+
+*            @danilo-sgalvao
+/frontend/   @FelipeNCampos @EnzoMachad0
+/infra/      @FelipeNCampos @danilo-sgalvao
+/docs/       @danilo-sgalvao @luizaugusto01
+/.github/    @danilo-sgalvao @luizaugusto01
