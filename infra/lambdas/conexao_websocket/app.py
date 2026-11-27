@@ -1,5 +1,6 @@
 """Registra conexões autenticadas e remove conexões encerradas."""
 import logging
+
 from comum import banco
 
 log = logging.getLogger(__name__)

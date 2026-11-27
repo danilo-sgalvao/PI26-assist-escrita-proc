@@ -1,0 +1,30 @@
+# Configuração do ruff para o código Python da infra (T69, #75).
+# Executar na raiz do repositório: ruff check infra/
+target-version = "py312"
+
+[lint]
+# Regras escolhidas: erros reais (F, E4, E9, W, PLE), ordem dos imports (I),
+# bugs prováveis (B), modernização (UP), simplificações (SIM), exceções
+# genéricas (BLE) e avisos do pylint (PLW).
+# Fora de propósito: E501/E70x (o código usa linhas longas e comandos
+# compactos de forma deliberada) e TRY (mensagens em exceções genéricas são
+# o padrão adotado nas Lambdas).
+select = ["F", "E4", "E9", "W", "I", "B", "UP", "SIM", "BLE", "PLE", "PLW"]
+
+[lint.isort]
+known-first-party = ["comum"]
+
+[lint.per-file-ignores]
+# BLE001: os handlers capturam qualquer exceção de propósito, para devolver
+# 503, "Unauthorized" ou batchItemFailures sem vazar detalhes ao cliente.
+"lambdas/**/app.py" = ["BLE001"]
+# Dívida técnica: o PR #70 (aberto) reescreve estes arquivos. Corrigir depois
+# do merge dele, para não gerar conflito.
+# - I001: imports fora de ordem;
+# - B904: raise dentro de except sem "from";
+# - B017: assertRaises(Exception) genérico;
+# - SIM117: with aninhados;
+# - F401: import sem uso (MagicMock).
+"lambdas/processador_bedrock/app.py" = ["BLE001", "I001", "B904"]
+"tests/test_lambdas.py" = ["I001", "B017", "SIM117"]
+"tests/test_fluxo_integrado.py" = ["I001", "F401"]

@@ -1,0 +1,18 @@
+# Configuração do coverage.py para os testes da infra (T69, #75).
+# Executar na raiz do repositório:
+#   coverage run --rcfile=infra/.coveragerc -m unittest discover -s infra/tests -v
+#   coverage report --rcfile=infra/.coveragerc
+[run]
+branch = True
+source = infra/lambdas
+data_file = infra/.coverage
+
+[report]
+show_missing = True
+skip_empty = True
+
+[xml]
+output = infra/coverage.xml
+
+[html]
+directory = infra/htmlcov

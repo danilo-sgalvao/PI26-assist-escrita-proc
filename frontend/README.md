@@ -16,9 +16,12 @@ O cliente Cognito precisa permitir `USER_PASSWORD_AUTH`. O primeiro acesso supor
 npm ci
 npm run dev
 npm test
+npm run test:coverage
 npm run lint
 npm run build
 ```
+
+`npm run test:coverage` gera o relatório de cobertura (Vitest com V8) em `coverage/`. O CI (`.github/workflows/ci.yml`) roda lint, testes com cobertura e build a cada PR e a cada push na `main`, e publica o relatório como artefato.
 
 O build em `dist/` pode ser enviado ao bucket de frontend e entregue pelo CloudFront. Para a rota direta do termo de ciência, configure fallback SPA no CloudFront. As variáveis `VITE_*` são públicas no bundle: não inclua senhas, segredos ou tokens nelas.
 
