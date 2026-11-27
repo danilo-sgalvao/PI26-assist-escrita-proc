@@ -13,7 +13,8 @@ def banco():
     token = boto3.client("rds").generate_db_auth_token(DBHostname=host, Port=port, DBUsername=user)
     return psycopg.connect(host=host, port=port, dbname=os.environ["DB_NAME"], user=user,
                            password=token, sslmode="verify-full",
-                           sslrootcert=os.environ["DB_CA_PATH"], connect_timeout=5)
+                           sslrootcert=os.environ["DB_CA_PATH"], connect_timeout=10)
+    # 10 s: na partida a frio dentro da VPC, a primeira conexão com autenticação IAM passou de 5 s (27/11/2026).
 
 
 def resposta(status, data):

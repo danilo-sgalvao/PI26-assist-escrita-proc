@@ -37,7 +37,7 @@ class FluxoIntegrado(unittest.TestCase):
             def converse(self, **kw):
                 self.request = kw
                 return {"stopReason": "tool_use", "output": {"message": {"content": [
-                    {"toolUse": {"toolUseId": "t1", "name": "registrar_orientacoes", "input": {"codigos": ["REVISAO"]}}}]}}}
+                    {"toolUse": {"toolUseId": "t1", "name": "registrar_orientacoes", "input": {"itens": [{"codigo": "REVISAO_GERAL", "paragrafo": 1}]}}}]}}}
         class Gateway:
             def post_to_connection(self, **kw): notificacoes.append(kw)
         s3, bedrock, gateway = S3(), Bedrock(), Gateway()
@@ -60,7 +60,8 @@ class FluxoIntegrado(unittest.TestCase):
             resultado = consulta.lambda_handler(get, None)
             self.assertEqual(json.loads(resultado["body"])["status"], "CONCLUIDO")
             self.assertEqual(len(notificacoes), 2)
-            self.assertNotIn("Texto particular", str(bedrock.request))
+            self.assertIn("Texto particular", str(bedrock.request))  # D1: o texto vai ao modelo; o identificador, não
+            self.assertNotIn("aluno", str(bedrock.request))
             get["requestContext"]["authorizer"]["claims"]["sub"] = "outro"
             self.assertEqual(consulta.lambda_handler(get, None)["statusCode"], 404)
 
