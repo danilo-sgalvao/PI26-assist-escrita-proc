@@ -66,6 +66,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: v1
+      # Sem esta opção, o SAM ignora os eventos Api das funções quando há DefinitionBody e a API fica só com /saude.
+      MergeDefinitions: true
       Cors:
         AllowOrigin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -83,9 +85,8 @@ Resources:
               Access-Control-Allow-Origin: !If [UsaOrigemPersonalizada, !Sub "'${FrontendOrigin}'", !Sub "'https://${DistribuicaoFrontend.DomainName}'"]
               Access-Control-Allow-Headers: "'Content-Type,Authorization'"
               Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+      # Sem autorizador padrão: ele anularia o security: [] da /saude. Cada rota de produção declara o Cognito.
       Auth:
-        AddDefaultAuthorizerToCorsPreflight: false
-        DefaultAuthorizer: Cognito
         Authorizers:
           Cognito:
             UserPoolArn: !GetAtt Identidade.Arn
@@ -341,6 +342,8 @@ Resources:
             RestApiId: !Ref ApiRest
             Path: /producoes
             Method: post
+            Auth:
+              Authorizer: Cognito
 
   Consulta:
     Type: AWS::Serverless::Function
@@ -369,6 +372,8 @@ Resources:
             RestApiId: !Ref ApiRest
             Path: /producoes/{id}
             Method: get
+            Auth:
+              Authorizer: Cognito
 
   Conexao:
     Type: AWS::Serverless::Function

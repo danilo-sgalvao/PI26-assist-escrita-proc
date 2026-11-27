@@ -23,6 +23,11 @@ def evento_s3(version="v1"):
                 "key": f"redacoes%2F{ID}.txt", "versionId": version}}}]}
 
 
+def resposta_ferramenta(entrada, nome="registrar_orientacoes"):
+    return {"stopReason": "tool_use", "output": {"message": {"content": [
+        {"toolUse": {"toolUseId": "t1", "name": nome, "input": entrada}}]}}}
+
+
 def conexao(linhas=None):
     conn = MagicMock()
     conn.__enter__.return_value = conn
@@ -75,16 +80,72 @@ class TestLambdas(unittest.TestCase):
             cognito.get_user.side_effect = ValueError()
             with self.assertRaises(Exception): auth.lambda_handler(event, None)
 
-    def test_analise_nao_envia_texto_ao_modelo_e_apenas_retorna_frases_fixas(self):
+    def test_analise_le_texto_numerado_e_so_exibe_catalogo_e_trecho_D1(self):
+        texto = "Primeira ideia do texto. Segunda frase da introdução.\n\nUm argumento sem exemplo."
         bedrock = MagicMock()
-        bedrock.converse.return_value = {"stopReason": "end_turn", "output": {"message": {"content": [{"text": '["REVISAO"]'}]}}}
+        bedrock.converse.return_value = resposta_ferramenta({"itens": [
+            {"codigo": "ARGUMENTO_SEM_SUSTENTACAO", "paragrafo": 2},
+            {"codigo": "FRASE_LONGA", "paragrafo": 1, "frase": 2},
+            {"codigo": "ARGUMENTO_SEM_SUSTENTACAO", "paragrafo": 2}]})
         with patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
-            saida = processador.analisar("Nome Confidencial. Redação privada!")
-        self.assertEqual(saida, [processador.ORIENTACOES["REVISAO"]])
-        self.assertNotIn("Confidencial", str(bedrock.converse.call_args))
-        bedrock.converse.return_value["output"]["message"]["content"][0]["text"] = '["texto inventado"]'
-        with patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
-            with self.assertRaises(ValueError): processador.analisar("texto")
+            saida = processador.analisar(texto)
+        self.assertEqual(saida, [
+            f"Parágrafo 2 — “Um argumento sem exemplo.”: {processador.ITENS['ARGUMENTO_SEM_SUSTENTACAO']['texto']}",
+            f"Parágrafo 1, frase 2 — “Segunda frase da introdução.”: {processador.ITENS['FRASE_LONGA']['texto']}"])
+        pedido = bedrock.converse.call_args.kwargs["messages"][0]["content"][0]["text"]
+        self.assertIn("[P1F2, 4 palavras] Segunda frase da introdução.", pedido)
+        self.assertIn("[P2F1, 4 palavras] Um argumento sem exemplo.", pedido)
+        config = bedrock.converse.call_args.kwargs["toolConfig"]
+        self.assertEqual(config["toolChoice"], {"tool": {"name": processador.FERRAMENTA}})
+        esquema = config["tools"][0]["toolSpec"]["inputSchema"]["json"]["properties"]["itens"]
+        self.assertEqual(esquema["items"]["properties"]["codigo"]["enum"], list(processador.ITENS))
+
+    def test_analise_usa_reserva_para_saida_fora_do_formato_FA02(self):
+        # A primeira é a resposta real do Nova Lite ao prompt antigo, que pedia o array como texto.
+        invalidas = [
+            {"stopReason": "end_turn", "output": {"message": {"content": [{"text": '```json\n{\n  "paragrafos": 5,\n  "frases": 18\n}\n```'}]}}},
+            resposta_ferramenta({"itens": [{"codigo": "texto inventado", "paragrafo": 1}]}),
+            resposta_ferramenta({"itens": []}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1}] * 4}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 3}]}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1, "frase": 9}]}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": True}]}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1, "texto": "Troque por..."}]}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1}], "comentario": "Reescreva assim"}),
+            resposta_ferramenta({"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1}]}, nome="outra_ferramenta"),
+            {"stopReason": "tool_use", "output": {"message": {"content": [{"text": "Sugiro reescrever assim:"}, {"toolUse": {"toolUseId": "t1", "name": processador.FERRAMENTA, "input": {"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1}]}}}]}}},
+            {"stopReason": "max_tokens", "output": {"message": {"content": [{"toolUse": {"toolUseId": "t1", "name": processador.FERRAMENTA, "input": {"itens": [{"codigo": "FRASE_LONGA", "paragrafo": 1}]}}}]}}},
+        ]
+        for resposta in invalidas:
+            bedrock = MagicMock()
+            bedrock.converse.return_value = resposta
+            with self.subTest(resposta=resposta), patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
+                self.assertEqual(processador.analisar("Uma frase. Outra frase.\n\nSegundo parágrafo."), [processador.RESERVA])
+
+    def test_analise_descarta_item_em_posicao_sem_sentido(self):
+        texto = "Introdução do texto.\n\nConclusão do texto."
+        casos = [
+            ({"itens": [{"codigo": "CONCLUSAO_RETOMA_TESE", "paragrafo": 1}, {"codigo": "FRASE_LONGA", "paragrafo": 2}]},
+             [f"Parágrafo 2 — “Conclusão do texto.”: {processador.ITENS['FRASE_LONGA']['texto']}"]),
+            ({"itens": [{"codigo": "LIGACAO_ENTRE_PARAGRAFOS", "paragrafo": 1}, {"codigo": "TEXTO_SEM_DIVISAO", "paragrafo": 1}]},
+             [processador.RESERVA]),
+        ]
+        for entrada, esperado in casos:
+            bedrock = MagicMock(); bedrock.converse.return_value = resposta_ferramenta(entrada)
+            with self.subTest(entrada=entrada), patch.object(processador.boto3, "client", return_value=bedrock), patch.dict(os.environ, {"BEDROCK_MODEL_ID": "modelo"}):
+                self.assertEqual(processador.analisar(texto), esperado)
+
+    def test_pedido_ao_modelo_nao_contem_identificador_do_estudante_RNF04(self):
+        tabela = MagicMock(); tabela.get_item.return_value = {}
+        dynamo = MagicMock(); dynamo.Table.return_value = tabela
+        s3 = MagicMock(); s3.get_object.return_value = {"Body": io.BytesIO("Uma redação inventada.".encode())}
+        bedrock = MagicMock(); bedrock.converse.return_value = resposta_ferramenta({"itens": [{"codigo": "REVISAO_GERAL", "paragrafo": 1}]})
+        conn = conexao(("sub-7f3a-identificador",)); conn.execute.return_value.fetchall.return_value = []
+        def cliente(service, **kwargs): return {"s3": s3, "bedrock-runtime": bedrock, "apigatewaymanagementapi": MagicMock()}[service]
+        with patch.object(processador, "banco", return_value=conn), patch.object(processador.boto3, "resource", return_value=dynamo), patch.object(processador.boto3, "client", side_effect=cliente), patch.dict(os.environ, {"TABELA_SUGESTOES": "tabela", "WEBSOCKET_ENDPOINT": "https://example.com", "BEDROCK_MODEL_ID": "modelo"}):
+            processador.processar("bucket", f"redacoes/{ID}.txt", "v1", ID)
+        self.assertIn("Uma redação inventada.", str(bedrock.converse.call_args))
+        self.assertNotIn("sub-7f3a-identificador", str(bedrock.converse.call_args))
 
     def test_sqs_valida_origem_versao_e_relata_apenas_falha(self):
         mensagem = {"messageId": "a", "body": json.dumps(evento_s3())}
